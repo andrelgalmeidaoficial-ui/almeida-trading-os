@@ -562,19 +562,63 @@ function PriorityList({ state, metrics }) {
 }
 
 function Projects({ state, updateState, openWorkspace }) {
-  const [form, setForm] = useState({ name:'', type:'Prop Firm', status:'Ativo', goal:'', targetPas:0, description:'' });
+  const emptyForm = { name:'', type:'Prop Firm', status:'Ativo', goal:'', targetPas:0, description:'' };
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
 
-  function addProject() {
+  function clearForm() {
+    setEditingId(null);
+    setForm(emptyForm);
+  }
+
+  function saveProject() {
     if (!form.name) return alert('Informe o nome do projeto.');
+    const payload = { ...form, id: editingId || uid('project'), targetPas:Number(form.targetPas||0) };
+
     updateState(s => {
-      s.projects.push({ ...form, id:uid('project'), targetPas:Number(form.targetPas||0) });
+      if (editingId) {
+        const idx = s.projects.findIndex(p => p.id === editingId);
+        if (idx >= 0) s.projects[idx] = payload;
+      } else {
+        s.projects.push(payload);
+      }
     });
-    setForm({ name:'', type:'Prop Firm', status:'Ativo', goal:'', targetPas:0, description:'' });
+    clearForm();
+  }
+
+  function editProject(project) {
+    setEditingId(project.id);
+    setForm({ ...project });
+  }
+
+  function deleteProject(projectId) {
+    const project = state.projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const linkedAccounts = state.accounts.filter(a => a.projectId === projectId);
+    const linkedEvals = state.evaluations.filter(e => e.projectId === projectId);
+    const msg = linkedAccounts.length || linkedEvals.length
+      ? `O projeto "${project.name}" possui ${linkedAccounts.length} conta(s) e ${linkedEvals.length} avaliação(ões). Excluir também removerá as operações vinculadas. Continuar?`
+      : `Excluir o projeto "${project.name}"?`;
+
+    if (!confirm(msg)) return;
+
+    updateState(s => {
+      const ids = new Set([
+        ...s.accounts.filter(a => a.projectId === projectId).map(a => a.id),
+        ...s.evaluations.filter(e => e.projectId === projectId).map(e => e.id)
+      ]);
+      s.projects = s.projects.filter(p => p.id !== projectId);
+      s.accounts = s.accounts.filter(a => a.projectId !== projectId);
+      s.evaluations = s.evaluations.filter(e => e.projectId !== projectId);
+      s.operations = s.operations.filter(o => !ids.has(o.accountId));
+      if (!s.projects.length) s.projects = initialState.projects;
+    });
   }
 
   return (
     <div className="stack">
-      <Panel title="Novo projeto" subtitle="Ex.: Apex 20 PAs, Mide, Earn2Trade, Capital Próprio">
+      <Panel title={editingId ? 'Editar projeto' : 'Novo projeto'} subtitle="Ex.: Apex 20 PAs, Mide, Earn2Trade, Capital Próprio">
         <div className="form">
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
           <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})}><option>Prop Firm</option><option>Conta Própria</option><option>Investimento</option><option>Estudos</option></select>
@@ -582,17 +626,23 @@ function Projects({ state, updateState, openWorkspace }) {
           <input placeholder="Meta" value={form.goal} onChange={e=>setForm({...form,goal:e.target.value})} />
           <input type="number" placeholder="Meta PAs" value={form.targetPas} onChange={e=>setForm({...form,targetPas:e.target.value})} />
           <input placeholder="Descrição" value={form.description} onChange={e=>setForm({...form,description:e.target.value})} />
-          <button onClick={addProject}><Plus size={16}/> Criar projeto</button>
+          <button onClick={saveProject}><Plus size={16}/> {editingId ? 'Atualizar projeto' : 'Criar projeto'}</button>
+          {editingId && <button className="secondary" onClick={clearForm}>Cancelar</button>}
         </div>
       </Panel>
 
       <Panel title="Projetos" subtitle="Módulos da sua carreira">
         <div className="projectGrid">
           {state.projects.map(p=>(
-            <button className="projectCard clickable" key={p.id} onClick={()=>openWorkspace(p.id)}>
-              <div><span className="badge">{p.type}</span><h3>{projectIcon(p.id)} {p.name}</h3><p>{p.description}</p></div>
-              <div className="projectFooter"><span>{p.status}</span><strong>{p.goal}</strong></div>
-            </button>
+            <div className="projectCard" key={p.id}>
+              <button className="projectOpenArea" onClick={()=>openWorkspace?.(p.id)}>
+                <div><span className="badge">{p.type}</span><h3>{projectIcon(p.id)} {p.name}</h3><p>{p.description}</p></div>
+                <div className="projectFooter"><span>{p.status}</span><strong>{p.goal}</strong></div>
+              </button>
+              <div className="projectActions">
+                <RowActions onEdit={()=>editProject(p)} onDelete={()=>deleteProject(p.id)} />
+              </div>
+            </div>
           ))}
         </div>
       </Panel>
@@ -734,12 +784,12 @@ function Finance({ state, metrics, updateState }) {
 
   function clearAccountForm() {
     setEditingAccountId(null);
-    setAccountForm(emptyAccount);
+    setAccountForm({ ...emptyAccount, projectId:state.projects[0]?.id || '' });
   }
 
   function clearEvalForm() {
     setEditingEvalId(null);
-    setEvalForm(emptyEval);
+    setEvalForm({ ...emptyEval, projectId:state.projects[0]?.id || '' });
   }
 
   function saveAccount() {
@@ -822,8 +872,8 @@ function Finance({ state, metrics, updateState }) {
             <select value={accountForm.type} onChange={e=>setAccountForm({...accountForm,type:e.target.value})}><option>PA</option><option>Financiada</option><option>Capital Próprio</option></select>
             <select value={accountForm.status} onChange={e=>setAccountForm({...accountForm,status:e.target.value})}><option>Ativa</option><option>Pausada</option><option>Perdida</option><option>Encerrada</option></select>
             <input type="number" placeholder="Saldo nominal" value={accountForm.nominalBalance} onChange={e=>setAccountForm({...accountForm,nominalBalance:e.target.value})}/>
-            <input type="number" placeholder="Resultado manual" value={accountForm.manualResult} onChange={e=>setAccountForm({...accountForm,manualResult:e.target.value})}/>
-            <input type="number" placeholder="Colchão/risco" value={accountForm.safetyBuffer} onChange={e=>setAccountForm({...accountForm,safetyBuffer:e.target.value})}/>
+            <input type="number" placeholder="Resultado inicial/manual" value={accountForm.manualResult} onChange={e=>setAccountForm({...accountForm,manualResult:e.target.value})}/>
+            <input type="number" placeholder="Colchão de segurança" value={accountForm.safetyBuffer} onChange={e=>setAccountForm({...accountForm,safetyBuffer:e.target.value})}/>
             <button onClick={saveAccount}><Plus size={16}/> {editingAccountId ? 'Atualizar conta' : 'Adicionar conta'}</button>
             {editingAccountId && <button className="secondary" onClick={clearAccountForm}>Cancelar</button>}
           </div>
@@ -845,7 +895,7 @@ function Finance({ state, metrics, updateState }) {
 
       <Panel title="Contas cadastradas" subtitle="Patrimônio líquido sem valor nominal">
         <DataTable
-          headers={['Projeto','Conta','Mesa','Status','Manual','Operações','Saques','Patrimônio','Ações']}
+          headers={['Projeto','Conta','Mesa','Status','Inicial','Operações','Saques','Patrimônio','Ações']}
           rows={metrics.paStats.map(a=>[
             projectName(state,a.projectId),
             a.name,

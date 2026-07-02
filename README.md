@@ -52,3 +52,12 @@ Pode publicar no Vercel:
 - Editar/excluir avaliações
 - Editar/excluir operações
 - Remoção automática de operações vinculadas quando conta/avaliação é excluída
+
+
+## v1.2 CRUD completo
+
+- Editar/excluir projetos
+- Editar/excluir contas
+- Editar/excluir avaliações
+- Editar/excluir operações
+- Campos renomeados para maior clareza
