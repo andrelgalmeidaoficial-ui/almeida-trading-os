@@ -10,8 +10,7 @@
     "react": "latest",
     "react-dom": "latest",
     "firebase": "latest",
-    "lucide-react": "latest",
-    "recharts": "latest"
+    "lucide-react": "latest"
   },
   "devDependencies": {}
 }
