@@ -1,15 +1,16 @@
-# Almeida Trading OS — V2.1 Workspace PRO
+# Almeida Trading OS — V2.2 Contas PRO
 
 ## Entrega
-- Workspace Context: opção B
-- Lucid Trading adicionada
-- Cards profissionais
-- Editar / excluir / duplicar
-- Favoritos
-- Busca
-- Ordenação
-- Dashboard individual do Workspace
-- Sincronização Firebase mantida
+- Cards profissionais de contas
+- Abrir dashboard individual da conta
+- Editar / excluir / duplicar conta
+- Busca por conta ou ID
+- Filtro por status
+- DD diário restante estimado
+- Colchão de segurança
+- Meta de saque com progresso
+- Histórico por conta
+- Contexto por Workspace mantido
 
 ## Testar
 
@@ -22,6 +23,6 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "Implementa Workspace PRO"
+git commit -m "Implementa Contas PRO"
 git push
 ```

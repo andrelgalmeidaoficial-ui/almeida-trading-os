@@ -182,6 +182,7 @@ function App() {
   const [sync, setSync] = useState('Conectando');
   const [page, setPage] = useState('home');
   const [contextId, setContextId] = useState('all');
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [state, setState] = useState(initialState);
 
   useEffect(() => onAuthStateChanged(auth, current => { setUser(current); if (!current) setLoaded(false); }), []);
@@ -251,7 +252,7 @@ function App() {
           <section className="content">
             {page === 'home' && <HomePage state={state} metrics={metrics} setPage={setPage} contextWorkspace={contextWorkspace} contextId={contextId} />}
             {page === 'workspaces' && <WorkspacesPage state={state} update={update} setContextId={setContextId} setPage={setPage} />}
-            {page === 'accounts' && <AccountsPage state={state} update={update} metrics={metrics} contextId={contextId} />}
+            {page === 'accounts' && <AccountsPage state={state} update={update} metrics={metrics} contextId={contextId} selectedAccountId={selectedAccountId} setSelectedAccountId={setSelectedAccountId} />}
             {page === 'operations' && <OperationsPage state={state} update={update} contextId={contextId} />}
             {page === 'finance' && <FinancePage state={state} metrics={metrics} />}
             {page === 'analytics' && <AnalyticsPage metrics={metrics} state={state} />}
@@ -506,49 +507,278 @@ function WorkspaceProCard({ workspace, open, edit, remove, duplicate, favorite, 
   );
 }
 
-function AccountsPage({ state, update, metrics, contextId }) {
-  const empty = { workspaceId: contextId === 'all' ? state.workspaces[0]?.id || '' : contextId, name:'', broker:'', accountCode:'', type:'PA', status:'Ativa', nominalBalance:50000, initialResult:0, safetyBuffer:0, maxDailyLoss:0, notes:'' };
+function AccountsPage({ state, update, metrics, contextId, selectedAccountId, setSelectedAccountId }) {
+  const empty = {
+    workspaceId: contextId === 'all' ? state.workspaces[0]?.id || '' : contextId,
+    name:'',
+    broker:'',
+    accountCode:'',
+    type:'PA',
+    status:'Ativa',
+    nominalBalance:50000,
+    initialResult:0,
+    safetyBuffer:0,
+    maxDailyLoss:0,
+    payoutTarget:0,
+    notes:''
+  };
+
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
-  useEffect(()=> { if (!editing) setForm(f => ({ ...f, workspaceId: contextId === 'all' ? f.workspaceId : contextId })); }, [contextId]);
-  const accounts = metrics.visibleAccounts;
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(()=> {
+    if (!editing) setForm(f => ({ ...f, workspaceId: contextId === 'all' ? f.workspaceId : contextId }));
+  }, [contextId]);
+
+  const accounts = metrics.visibleAccounts
+    .filter(a => a.name.toLowerCase().includes(query.toLowerCase()) || (a.accountCode || '').toLowerCase().includes(query.toLowerCase()))
+    .filter(a => statusFilter === 'all' || a.status === statusFilter);
+
+  const selectedAccount = metrics.visibleAccounts.find(a => a.id === selectedAccountId) || null;
+
   function save() {
     if (!form.name) return alert('Informe o nome da conta.');
-    const payload = { ...form, id: editing || uid('acc'), nominalBalance:Number(form.nominalBalance || 0), initialResult:Number(form.initialResult || 0), safetyBuffer:Number(form.safetyBuffer || 0), maxDailyLoss:Number(form.maxDailyLoss || 0) };
+    const payload = {
+      ...form,
+      id: editing || uid('acc'),
+      nominalBalance:Number(form.nominalBalance || 0),
+      initialResult:Number(form.initialResult || 0),
+      safetyBuffer:Number(form.safetyBuffer || 0),
+      maxDailyLoss:Number(form.maxDailyLoss || 0),
+      payoutTarget:Number(form.payoutTarget || 0)
+    };
     update(s => {
-      if (editing) { const idx = s.accounts.findIndex(a => a.id === editing); if (idx >= 0) s.accounts[idx] = payload; }
-      else s.accounts.push(payload);
+      if (editing) {
+        const idx = s.accounts.findIndex(a => a.id === editing);
+        if (idx >= 0) s.accounts[idx] = payload;
+      } else {
+        s.accounts.push(payload);
+      }
     });
-    setEditing(null); setForm(empty);
+    setEditing(null);
+    setForm(empty);
   }
-  function edit(acc) { setEditing(acc.id); setForm({ ...acc }); }
+
+  function edit(acc) {
+    setEditing(acc.id);
+    setForm({ ...acc, payoutTarget: acc.payoutTarget || 0 });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   function remove(id) {
     if (!confirm('Excluir esta conta? Operações vinculadas também serão removidas.')) return;
-    update(s => { s.accounts = s.accounts.filter(a => a.id !== id); s.operations = s.operations.filter(o => o.accountId !== id); });
+    update(s => {
+      s.accounts = s.accounts.filter(a => a.id !== id);
+      s.operations = s.operations.filter(o => o.accountId !== id);
+    });
+    if (selectedAccountId === id) setSelectedAccountId(null);
   }
+
+  function duplicate(acc) {
+    update(s => {
+      s.accounts.push({
+        ...acc,
+        id: uid('acc'),
+        name: `${acc.name} - cópia`,
+        accountCode: acc.accountCode ? `${acc.accountCode}-copy` : '',
+        initialResult: 0
+      });
+    });
+  }
+
+  function openAccount(acc) {
+    setSelectedAccountId(acc.id);
+  }
+
+  if (selectedAccount) {
+    const ops = metrics.visibleOperations.filter(o => o.accountId === selectedAccount.id);
+    const today = new Date().toISOString().slice(0,10);
+    const todayResult = ops.filter(o => o.date === today).reduce((s,o)=>s+Number(o.result||0),0);
+    const weekResult = ops.slice(-7).reduce((s,o)=>s+Number(o.result||0),0);
+    const payoutProgress = selectedAccount.payoutTarget ? Math.min(100, Math.round((selectedAccount.net / selectedAccount.payoutTarget) * 100)) : 0;
+    const ddRemaining = Number(selectedAccount.maxDailyLoss || 0) + Math.min(0, todayResult);
+
+    return (
+      <div className="stack">
+        <button className="ghost back-btn" onClick={()=>setSelectedAccountId(null)}><ArrowLeft size={16}/> Voltar para contas</button>
+
+        <section className="account-hero">
+          <div>
+            <span className="eyebrow">{workspaceName(state, selectedAccount.workspaceId)}</span>
+            <h2>{selectedAccount.name}</h2>
+            <p>{selectedAccount.type} • {selectedAccount.status} • {selectedAccount.broker}</p>
+          </div>
+          <div className={`health-badge ${healthClass(selectedAccount.health)}`}>{selectedAccount.health}</div>
+        </section>
+
+        <div className="grid four">
+          <Kpi title="Patrimônio" value={usd(selectedAccount.net)} sub="real" />
+          <Kpi title="Hoje" value={usd(todayResult)} sub="resultado do dia" />
+          <Kpi title="Semana" value={usd(weekResult)} sub="últimos registros" />
+          <Kpi title="DD diário restante" value={usd(ddRemaining)} sub="estimado" />
+        </div>
+
+        <div className="grid two">
+          <Card title="Meta de saque" subtitle="Progresso da conta">
+            <div className="mission-box">
+              <h3>{selectedAccount.payoutTarget ? `${usd(selectedAccount.net)} / ${usd(selectedAccount.payoutTarget)}` : 'Meta não definida'}</h3>
+              <Progress value={payoutProgress} />
+              <small>Colchão de segurança: {usd(selectedAccount.safetyBuffer)}</small>
+            </div>
+          </Card>
+          <Card title="Resumo operacional" subtitle="Conta selecionada">
+            <DataTable
+              headers={['Indicador','Valor']}
+              rows={[
+                ['Operações', ops.length],
+                ['Resultado total', usd(selectedAccount.result)],
+                ['Saques', usd(selectedAccount.withdrawals)],
+                ['Código/ID', selectedAccount.accountCode || '-'],
+                ['Observações', selectedAccount.notes || '-']
+              ]}
+            />
+          </Card>
+        </div>
+
+        <Card title="Histórico da conta" subtitle="Operações vinculadas">
+          <DataTable
+            headers={['Data','Ativo','Setup','Resultado','Exec.','Emoc.']}
+            rows={ops.slice().reverse().map(o => [o.date, o.asset, o.setup || '-', usd(o.result), o.executionScore, o.emotionalScore])}
+          />
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="stack">
       <Card title={editing ? 'Editar Conta' : 'Nova Conta'} subtitle="PA, financiada, avaliação ou capital próprio">
-        <div className="form">
-          <select value={form.workspaceId} onChange={e=>setForm({...form,workspaceId:e.target.value})}>{state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}</select>
+        <div className="form account-form">
+          <select value={form.workspaceId} onChange={e=>setForm({...form,workspaceId:e.target.value})}>
+            {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
+          </select>
           <input placeholder="Nome da conta" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
           <input placeholder="Mesa/Corretora" value={form.broker} onChange={e=>setForm({...form,broker:e.target.value})} />
           <input placeholder="ID/Código" value={form.accountCode} onChange={e=>setForm({...form,accountCode:e.target.value})} />
-          <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})}><option>PA</option><option>Avaliação</option><option>Financiada</option><option>Capital Próprio</option></select>
-          <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Ativa</option><option>Em andamento</option><option>Pausada</option><option>Aprovada</option><option>Reprovada</option><option>Encerrada</option></select>
+          <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})}>
+            <option>PA</option>
+            <option>Avaliação</option>
+            <option>Financiada</option>
+            <option>Capital Próprio</option>
+          </select>
+          <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>
+            <option>Ativa</option>
+            <option>Em andamento</option>
+            <option>Pausada</option>
+            <option>Aprovada</option>
+            <option>Reprovada</option>
+            <option>Encerrada</option>
+          </select>
           <input type="number" placeholder="Saldo nominal" value={form.nominalBalance} onChange={e=>setForm({...form,nominalBalance:e.target.value})} />
           <input type="number" placeholder="Resultado inicial/manual" value={form.initialResult} onChange={e=>setForm({...form,initialResult:e.target.value})} />
           <input type="number" placeholder="Colchão de segurança" value={form.safetyBuffer} onChange={e=>setForm({...form,safetyBuffer:e.target.value})} />
           <input type="number" placeholder="Loss diário máximo" value={form.maxDailyLoss} onChange={e=>setForm({...form,maxDailyLoss:e.target.value})} />
+          <input type="number" placeholder="Meta de saque" value={form.payoutTarget || 0} onChange={e=>setForm({...form,payoutTarget:e.target.value})} />
+          <input placeholder="Observações" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} />
           <button onClick={save}><Save size={15} /> {editing ? 'Atualizar' : 'Salvar'}</button>
           {editing && <button className="secondary" onClick={()=>{setEditing(null);setForm(empty)}}><X size={15}/>Cancelar</button>}
         </div>
       </Card>
-      <Card title="Contas cadastradas" subtitle="Patrimônio real sem saldo nominal">
-        <DataTable headers={['Workspace','Conta','Tipo','Status','Inicial','Operações','Saques','Patrimônio','Ações']} rows={accounts.map(a => [workspaceName(state, a.workspaceId), a.name, a.type, a.status, usd(a.initialResult), usd(a.result), usd(a.withdrawals), usd(a.net), <Actions onEdit={()=>edit(a)} onDelete={()=>remove(a.id)} />])} />
+
+      <div className="toolbar">
+        <div className="searchbox"><Search size={16}/><input placeholder="Buscar conta ou ID..." value={query} onChange={e=>setQuery(e.target.value)} /></div>
+        <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
+          <option value="all">Todos os status</option>
+          <option>Ativa</option>
+          <option>Em andamento</option>
+          <option>Aprovada</option>
+          <option>Pausada</option>
+          <option>Reprovada</option>
+          <option>Encerrada</option>
+        </select>
+      </div>
+
+      <div className="account-grid">
+        {accounts.map(a => (
+          <AccountProCard
+            key={a.id}
+            account={a}
+            workspace={workspaceName(state, a.workspaceId)}
+            open={()=>openAccount(a)}
+            edit={()=>edit(a)}
+            duplicate={()=>duplicate(a)}
+            remove={()=>remove(a.id)}
+          />
+        ))}
+      </div>
+
+      <Card title="Tabela de contas" subtitle="Visão detalhada">
+        <DataTable
+          headers={['Workspace','Conta','Tipo','Status','Inicial','Operações','Saques','Patrimônio','Ações']}
+          rows={accounts.map(a => [
+            workspaceName(state, a.workspaceId),
+            a.name,
+            a.type,
+            a.status,
+            usd(a.initialResult),
+            usd(a.result),
+            usd(a.withdrawals),
+            usd(a.net),
+            <Actions onEdit={()=>edit(a)} onDelete={()=>remove(a.id)} />
+          ])}
+        />
       </Card>
     </div>
   );
+}
+
+function AccountProCard({ account, workspace, open, edit, duplicate, remove }) {
+  const ddRemaining = Number(account.maxDailyLoss || 0) + Math.min(0, Number(account.resultToday || 0));
+  const payoutProgress = account.payoutTarget ? Math.min(100, Math.round((account.net / account.payoutTarget) * 100)) : 0;
+
+  return (
+    <div className={`account-pro ${healthClass(account.health)}`}>
+      <div className="account-head">
+        <div>
+          <span>{workspace}</span>
+          <h3>{account.name}</h3>
+        </div>
+        <div className={`health-dot ${healthClass(account.health)}`}></div>
+      </div>
+      <div className="account-meta">
+        <span>{account.type}</span>
+        <span>{account.status}</span>
+        <span>{account.accountCode || 'Sem ID'}</span>
+      </div>
+      <div className="account-values">
+        <div><span>Patrimônio</span><strong>{usd(account.net)}</strong></div>
+        <div><span>Hoje</span><strong>{usd(account.resultToday)}</strong></div>
+        <div><span>DD restante</span><strong>{usd(ddRemaining)}</strong></div>
+        <div><span>Colchão</span><strong>{usd(account.safetyBuffer)}</strong></div>
+      </div>
+      <div>
+        <div className="account-progress-label">
+          <span>Meta de saque</span>
+          <b>{account.payoutTarget ? `${payoutProgress}%` : '—'}</b>
+        </div>
+        <Progress value={payoutProgress} />
+      </div>
+      <div className="row-actions">
+        <button className="secondary" onClick={open}>Abrir Conta</button>
+        <IconButton onClick={edit} icon={<Edit3 size={15}/>} />
+        <IconButton onClick={duplicate} icon={<Copy size={15}/>} />
+        <IconButton danger onClick={remove} icon={<Trash2 size={15}/>} />
+      </div>
+    </div>
+  );
+}
+
+function healthClass(health) {
+  if (health === 'Saudável') return 'healthy';
+  if (health === 'Atenção') return 'warning';
+  return 'risk';
 }
 
 function OperationsPage({ state, update, contextId }) {
