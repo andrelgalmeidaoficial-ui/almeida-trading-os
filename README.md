@@ -1,18 +1,15 @@
-# Almeida Trading OS — V2.5 Iniciar Pregão
+# Almeida Trading OS — V2.6 Centro de Comando
 
-## Entrega real
-- Menu Pregão
-- Botão 🚀 Iniciar Pregão
-- Botão 🛑 Encerrar Pregão
-- Tela de preparação do pregão
-- Checklist operacional
-- Objetivo do dia
-- Meta diária
-- Loss máximo
-- Registro rápido de operação
-- Operações vinculadas ao pregão
-- Histórico dos últimos pregões
-- Base para J.A.V.E.S. acompanhar o pregão
+## Entrega
+- Dashboard mais limpo
+- Home como Centro de Comando real
+- Workspaces saem do visual pesado em cards grandes na Home
+- Visão global consolidada
+- Visão por Workspace quando selecionado no topo
+- Bloco principal de Pregão
+- J.A.V.E.S. com leitura rápida
+- Tabela resumida de Workspaces
+- Mantém Pregão / Contas PRO / Workspaces PRO
 
 ## Testar
 
@@ -25,6 +22,6 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "Implementa V2.5 Iniciar Pregao"
+git commit -m "Implementa Centro de Comando v2.6"
 git push
 ```

@@ -204,3 +204,56 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
   content:" • v2.5";
   color:#93C5FD;
 }
+
+
+/* V2.6 Centro de Comando */
+.command-hero{
+  border-color:rgba(96,165,250,.35);
+}
+.command-strip{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.command-strip div{
+  background:rgba(17,24,39,.92);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px 16px;
+}
+.command-strip span{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  font-weight:950;
+}
+.command-strip strong{
+  display:block;
+  margin-top:6px;
+  font-size:16px;
+}
+.pregao-box{
+  background:#0A1020;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+  display:grid;
+  gap:10px;
+}
+.pregao-box h3{
+  margin:0;
+  font-size:24px;
+}
+.pregao-box p{
+  margin:0;
+  color:#CBD5E1;
+}
+.command-main .card{
+  min-height:230px;
+}
+@media(max-width:760px){
+  .command-strip{
+    grid-template-columns:1fr;
+  }
+}

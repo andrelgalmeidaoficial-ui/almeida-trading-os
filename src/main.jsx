@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Iniciar Pregão</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Centro de Comando</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.5</span><strong>Iniciar Pregão</strong></div>
+      <div className="sidebar-footer"><span>v2.6</span><strong>Centro de Comando</strong></div>
     </aside>
   );
 }
@@ -335,38 +335,97 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
 function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
   const hour = new Date().getHours();
   const greet = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  const isGlobal = contextId === 'all';
+  const mainTitle = isGlobal ? 'Centro de Comando Geral' : `${contextWorkspace.icon} ${contextWorkspace.name}`;
+
   return (
     <div className="stack">
-      <section className="hero">
+      <section className="hero command-hero">
         <div>
-          <span className="eyebrow">{contextWorkspace ? 'Workspace ativo' : 'Almeida Trading OS • v2.5 Iniciar Pregão'}</span>
+          <span className="eyebrow">Almeida Trading OS • v2.6 Centro de Comando</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
-          <p>{contextWorkspace ? contextWorkspace.notes : state.settings.motto}</p>
+          <p>{isGlobal ? state.settings.motto : contextWorkspace.mission}</p>
         </div>
         <button onClick={()=>setPage('session')}><PlayCircle size={18} /> 🚀 Iniciar Pregão</button>
       </section>
 
+      <div className="command-strip">
+        <div>
+          <span>Contexto atual</span>
+          <strong>{mainTitle}</strong>
+        </div>
+        <div>
+          <span>Modo</span>
+          <strong>{isGlobal ? 'Visão consolidada' : 'Análise da mesa/projeto'}</strong>
+        </div>
+      </div>
+
       <div className="grid four">
         <Kpi title="Capital construído" value={usd(metrics.builtCapital)} sub={brl(metrics.builtCapital * state.settings.fx)} />
-        <Kpi title="Patrimônio real" value={usd(metrics.netWorth)} sub="Sem saldo nominal" />
-        <Kpi title="Hoje" value={usd(metrics.todayResult)} sub={contextId === 'all' ? 'Todos os Workspaces' : 'Workspace ativo'} />
+        <Kpi title="Patrimônio real" value={usd(metrics.netWorth)} sub={isGlobal ? 'Todos os Workspaces' : contextWorkspace.name} />
+        <Kpi title="Resultado hoje" value={usd(metrics.todayResult)} sub="pregão / operações do dia" />
         <Kpi title="TES" value={metrics.tes || 0} sub="Trader Evolution Score" />
       </div>
 
-      {contextWorkspace && <WorkspaceDashboard state={state} metrics={metrics} workspace={contextWorkspace} />}
-      {!contextWorkspace && (
-        <div className="workspace-pro-grid">
-          {sortWorkspaces(metrics.workspaceStats).map(w => <WorkspaceProCard key={w.id} workspace={w} open={()=>{}} compact />)}
-        </div>
+      <div className="grid two command-main">
+        <Card title="Pregão" subtitle="Ação principal do dia">
+          <div className="pregao-box">
+            <h3>Preparar, executar e encerrar</h3>
+            <p>Inicie o pregão, registre operações rápidas e encerre com resumo automático.</p>
+            <button onClick={()=>setPage('session')}><PlayCircle size={18} /> 🚀 Iniciar Pregão</button>
+          </div>
+        </Card>
+
+        <Card title="J.A.V.E.S. — Leitura rápida" subtitle="Painel por regras, sem API ainda">
+          <div className="javes-message big">
+            <p>{dailyBrief(state, metrics, contextWorkspace)}</p>
+          </div>
+        </Card>
+      </div>
+
+      {!isGlobal && <WorkspaceDashboard state={state} metrics={metrics} workspace={contextWorkspace} />}
+
+      {isGlobal && (
+        <Card title="Workspaces" subtitle="Escolha uma mesa/projeto no topo ou abra a tela Workspaces">
+          <DataTable
+            headers={['Workspace','Contas','Operações','Hoje','Patrimônio','TES']}
+            rows={sortWorkspaces(metrics.workspaceStats).map(w => [
+              `${w.icon} ${w.name}`,
+              w.accountsCount,
+              w.operationsCount,
+              usd(w.today),
+              usd(w.net),
+              w.tes
+            ])}
+          />
+        </Card>
       )}
 
       <div className="grid two">
         <Card title="Últimas operações" subtitle="Registro operacional">
-          <DataTable headers={['Data','Conta','Resultado','Setup']} rows={metrics.visibleOperations.slice(-5).reverse().map(o => [o.date, accountName(state, o.accountId), usd(o.result), o.setup || '-'])} />
+          <DataTable
+            headers={['Data','Conta','Resultado','Setup']}
+            rows={metrics.visibleOperations.slice(-5).reverse().map(o => [
+              o.date,
+              accountName(state, o.accountId),
+              usd(o.result),
+              o.setup || '-'
+            ])}
+          />
         </Card>
+
         <Card title="Saúde das contas" subtitle="Risco e colchão">
           <div className="workspace-list">
-            {metrics.visibleAccounts.map(a => <div className="list-row" key={a.id}><div><strong>{a.name}</strong><small>{a.health} • {a.status}</small></div><b>{usd(a.net)}</b></div>)}
+            {metrics.visibleAccounts.slice(0, 6).map(a => (
+              <div className="list-row" key={a.id}>
+                <div>
+                  <strong>{a.name}</strong>
+                  <small>{a.health} • {a.status}</small>
+                </div>
+                <b>{usd(a.net)}</b>
+              </div>
+            ))}
+            {!metrics.visibleAccounts.length && <div className="empty">Nenhuma conta neste contexto.</div>}
           </div>
         </Card>
       </div>
@@ -621,7 +680,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Iniciar Pregão">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Centro de Comando">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -1092,7 +1151,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Iniciar Pregão ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. Centro de Comando ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital.`;
