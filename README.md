@@ -1,16 +1,28 @@
-# Almeida Trading OS — V2.9.1 Values Fix
+# Almeida Trading OS — Sprint 10.1 Pregão Unificado
 
-## Correções
-- Home: Capital construído, Patrimônio real e Resultado hoje com cores
-- Workspaces: Hoje e Patrimônio com cores
-- Analytics: resultado por setup com cores
-- Tabelas: valores positivos/negativos destacados
+## Entrega
+- Pregão único para várias mesas
+- Seleção de mesas no início do pregão
+- Operações vinculadas ao pregão ativo
+- Cada operação continua ligada à conta e ao Workspace
+- Resultado consolidado do pregão
+- Resultado por mesa/projeto
+- Histórico dos últimos pregões
+- Mantém Contas, Workspaces, Financeiro, Analytics e J.A.V.E.S.
+
+## Fluxo
+Pregão → Operações → Conta → Workspace
+
+## Testar
+
+```bash
+npm run dev
+```
 
 ## Publicar
 
 ```bash
-npm run dev
 git add .
-git commit -m "Corrige cores de valores v2.9.1"
+git commit -m "Implementa Sprint 10.1 Pregao Unificado"
 git push
 ```

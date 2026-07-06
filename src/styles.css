@@ -313,3 +313,36 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
 .table-wrap .money-neutral{
   font-weight:950;
 }
+
+
+/* Sprint 10.1 Pregão Unificado */
+.workspace-check-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.workspace-check{
+  background:#0A1020;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  color:#CBD5E1;
+  font-weight:800;
+}
+.workspace-check.active{
+  border-color:#2563EB;
+  background:rgba(37,99,235,.16);
+  color:#F8FAFC;
+}
+.workspace-check input{
+  width:18px;
+  height:18px;
+}
+@media(max-width:760px){
+  .workspace-check-grid{
+    grid-template-columns:1fr;
+  }
+}
