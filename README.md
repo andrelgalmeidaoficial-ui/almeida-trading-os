@@ -1,12 +1,22 @@
-# Almeida Trading OS — V2.7 UX Fix + Dashboard Clean
+# Almeida Trading OS — V2.8 Engine Base
 
 ## Entrega
-- Corrige bug `undefined` antes dos nomes dos Workspaces
-- Mantém ícone padrão 🎯 quando não houver ícone cadastrado
-- Ajusta textos do Dashboard
-- Melhora descrição do TES
-- J.A.V.E.S. com mensagem mais objetiva
-- Mantém estrutura da V2.6
+- Cria pasta `src/engine`
+- Separa regras iniciais de:
+  - TES
+  - Financeiro
+  - J.A.V.E.S.
+  - Pregão
+- Adiciona card visual Engine v2.8 no Dashboard
+- Mantém V2.7 funcionando
+- Prepara o projeto para as próximas sprints sem continuar inchando o `main.jsx`
+
+## Arquivos novos
+
+- `src/engine/tes.js`
+- `src/engine/finance.js`
+- `src/engine/javesRules.js`
+- `src/engine/sessionEngine.js`
 
 ## Testar
 
@@ -19,6 +29,6 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "Implementa UX Fix v2.7"
+git commit -m "Implementa Engine Base v2.8"
 git push
 ```
