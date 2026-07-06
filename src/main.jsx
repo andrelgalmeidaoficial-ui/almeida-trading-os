@@ -276,7 +276,7 @@ function App() {
 function Sidebar({ page, setPage }) {
   const items = [
     ['home', Home, 'Home'],
-    ['session', ClipboardCheck, 'Sessão PRO'],
+    ['session', ClipboardCheck, 'Pregão'],
     ['workspaces', Briefcase, 'Workspaces'],
     ['accounts', Wallet, 'Contas'],
     ['operations', Activity, 'Operações'],
@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Session PRO</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Iniciar Pregão</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.4</span><strong>Session PRO</strong></div>
+      <div className="sidebar-footer"><span>v2.5</span><strong>Iniciar Pregão</strong></div>
     </aside>
   );
 }
@@ -339,11 +339,11 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero">
         <div>
-          <span className="eyebrow">{contextWorkspace ? 'Workspace ativo' : 'Almeida Trading OS • v2.4 Session PRO'}</span>
+          <span className="eyebrow">{contextWorkspace ? 'Workspace ativo' : 'Almeida Trading OS • v2.5 Iniciar Pregão'}</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{contextWorkspace ? contextWorkspace.notes : state.settings.motto}</p>
         </div>
-        <button onClick={()=>setPage('session')}><PlayCircle size={18} /> Executar Plano</button>
+        <button onClick={()=>setPage('session')}><PlayCircle size={18} /> 🚀 Iniciar Pregão</button>
       </section>
 
       <div className="grid four">
@@ -492,16 +492,16 @@ function SessionPage({ state, update, contextId, setPage }) {
       <div className="stack">
         <section className="session-hero active-session">
           <div>
-            <span className="eyebrow">Sessão ativa</span>
-            <h2>Sessão Ativa</h2>
+            <span className="eyebrow">Pregão em andamento</span>
+            <h2>Pregão em Andamento</h2>
             <p>{workspaceName(state, active.workspaceId)} • {accountName(state, active.accountId)}</p>
           </div>
-          <button className="danger" onClick={finishSession}><StopCircle size={18}/> Encerrar Sessão</button>
+          <button className="danger" onClick={finishSession}><StopCircle size={18}/> 🛑 Encerrar Pregão</button>
         </section>
 
         <div className="grid four">
-          <Kpi title="Início" value={started?.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} sub="horário da sessão" />
-          <Kpi title="Resultado" value={usd(sessionResult)} sub="sessão atual" />
+          <Kpi title="Início" value={started?.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} sub="início do pregão" />
+          <Kpi title="Resultado" value={usd(sessionResult)} sub="pregão atual" />
           <Kpi title="Operações" value={sessionOps.length} sub="registradas" />
           <Kpi title="Meta / Loss" value={`${usd(active.dailyTarget)} / -${usd(active.maxLoss)}`} sub="plano do dia" />
         </div>
@@ -531,7 +531,7 @@ function SessionPage({ state, update, contextId, setPage }) {
           </Card>
         </div>
 
-        <Card title="Operações da sessão" subtitle="Somente esta sessão">
+        <Card title="Operações do pregão" subtitle="Somente este pregão">
           <DataTable headers={['Data','Conta','Ativo','Setup','Resultado','Exec.','Emoc.']} rows={sessionOps.slice().reverse().map(o => [o.date, accountName(state,o.accountId), o.asset, o.setup || '-', usd(o.result), o.executionScore, o.emotionalScore])} />
         </Card>
       </div>
@@ -544,14 +544,14 @@ function SessionPage({ state, update, contextId, setPage }) {
     <div className="stack">
       <section className="session-hero">
         <div>
-          <span className="eyebrow">Modo Sessão</span>
-          <h2>Executar Plano</h2>
-          <p>Inicie, registre operações rápidas e encerre com resumo automático.</p>
+          <span className="eyebrow">Modo Pregão</span>
+          <h2>🚀 Iniciar Pregão</h2>
+          <p>Abra o pregão, registre operações rápidas e encerre com resumo automático.</p>
         </div>
-        <button onClick={startSession}><PlayCircle size={18}/> Iniciar Sessão</button>
+        <button onClick={startSession}><PlayCircle size={18}/> 🚀 Iniciar Pregão</button>
       </section>
 
-      <Card title="Preparação da sessão" subtitle="Defina o plano antes de operar">
+      <Card title="Preparação do pregão" subtitle="Defina o plano antes de abrir o mercado">
         <div className="form session-form">
           <select value={form.workspaceId} onChange={e=>setForm({...form,workspaceId:e.target.value})}>
             {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
@@ -568,7 +568,7 @@ function SessionPage({ state, update, contextId, setPage }) {
         </div>
       </Card>
 
-      <Card title="Últimas sessões" subtitle="Histórico recente">
+      <Card title="Últimos pregões" subtitle="Histórico recente de pregões">
         <DataTable headers={['Data','Workspace','Resultado','Operações','Exec.','Emoc.']} rows={lastSessions.map(s => [s.date, workspaceName(state,s.workspaceId), usd(s.result), s.operationsCount, Number(s.avgExec||0).toFixed(1), Number(s.avgEmotion||0).toFixed(1)])} />
       </Card>
     </div>
@@ -621,7 +621,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Session PRO">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Iniciar Pregão">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -1084,7 +1084,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
       <div className="panel-title"><Bot size={20} /><div><strong>J.A.V.E.S.</strong><small>Online</small></div></div>
       <div className="javes-message"><p>{dailyBrief(state, metrics, contextWorkspace)}</p></div>
       <div className="checklist"><label><input type="checkbox" /> Mercado analisado</label><label><input type="checkbox" /> Plano revisado</label><label><input type="checkbox" /> Risco definido</label><label><input type="checkbox" /> Setup A+ somente</label></div>
-      <button className="full"><PlayCircle size={16} /> Executar Plano</button>
+      <button className="full"><PlayCircle size={16} /> 🚀 Iniciar Pregão</button>
     </div>
   );
 }
@@ -1092,7 +1092,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Session PRO ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. Iniciar Pregão ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital.`;

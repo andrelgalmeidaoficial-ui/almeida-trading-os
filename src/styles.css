@@ -198,3 +198,9 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
   .session-hero h2{font-size:28px}
   .session-form,.session-op-form{grid-template-columns:1fr}
 }
+
+/* V2.5 Iniciar Pregão */
+.session-hero .eyebrow::after{
+  content:" • v2.5";
+  color:#93C5FD;
+}

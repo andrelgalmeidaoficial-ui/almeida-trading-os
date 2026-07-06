@@ -1,30 +1,23 @@
-# Almeida Trading OS — V2.4 Session PRO
+# Almeida Trading OS — V2.5 Iniciar Pregão
 
-## Entrega visível
-- Menu **Sessão PRO**
-- Botão **Executar Plano** abre a tela de sessão
-- Iniciar sessão
-- Encerrar sessão
+## Entrega real
+- Menu Pregão
+- Botão 🚀 Iniciar Pregão
+- Botão 🛑 Encerrar Pregão
+- Tela de preparação do pregão
 - Checklist operacional
+- Objetivo do dia
 - Meta diária
 - Loss máximo
 - Registro rápido de operação
-- Operações vinculadas à sessão
-- Histórico das últimas sessões
-- Marcador visual v2.4 para confirmar que a versão entrou
+- Operações vinculadas ao pregão
+- Histórico dos últimos pregões
+- Base para J.A.V.E.S. acompanhar o pregão
 
-## Instalação
-
-Substitua estes arquivos/pastas no projeto:
-
-- `src`
-- `index.html`
-- `package.json`
-- `README.md`
-
-Depois rode:
+## Testar
 
 ```bash
+npm install
 npm run dev
 ```
 
@@ -32,6 +25,6 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "Implementa Session PRO v2.4"
+git commit -m "Implementa V2.5 Iniciar Pregao"
 git push
 ```
