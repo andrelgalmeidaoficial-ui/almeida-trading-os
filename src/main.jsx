@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Centro de Comando</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>UX Fix</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.6</span><strong>Centro de Comando</strong></div>
+      <div className="sidebar-footer"><span>v2.7</span><strong>UX Fix</strong></div>
     </aside>
   );
 }
@@ -315,14 +315,14 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
   return (
     <header className="topbar">
       <div>
-        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Centro de Comando'}</h1>
+        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'UX Fix'}</h1>
         <p>{contextWorkspace ? contextWorkspace.mission : 'Disciplina executa. Consistência constrói.'}</p>
       </div>
       <div className="top-actions">
         <span className="sync"><Cloud size={15} /> {sync}</span>
         <select value={contextId} onChange={e=>setContextId(e.target.value)}>
           <option value="all">Todos os Workspaces</option>
-          {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
+          {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon || '🎯'} {w.name}</option>)}
         </select>
         <button className="ghost" onClick={exportBackup}><Download size={15} /> Backup</button>
         <label className="ghost upload"><Upload size={15} /> Importar<input type="file" accept=".json" onChange={importBackup} /></label>
@@ -342,7 +342,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero command-hero">
         <div>
-          <span className="eyebrow">Almeida Trading OS • v2.6 Centro de Comando</span>
+          <span className="eyebrow">Almeida Trading OS • v2.7 UX Fix</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{isGlobal ? state.settings.motto : contextWorkspace.mission}</p>
         </div>
@@ -364,7 +364,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
         <Kpi title="Capital construído" value={usd(metrics.builtCapital)} sub={brl(metrics.builtCapital * state.settings.fx)} />
         <Kpi title="Patrimônio real" value={usd(metrics.netWorth)} sub={isGlobal ? 'Todos os Workspaces' : contextWorkspace.name} />
         <Kpi title="Resultado hoje" value={usd(metrics.todayResult)} sub="pregão / operações do dia" />
-        <Kpi title="TES" value={metrics.tes || 0} sub="Trader Evolution Score" />
+        <Kpi title="TES" value={metrics.tes || 0} sub="Evolução do trader" />
       </div>
 
       <div className="grid two command-main">
@@ -390,7 +390,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
           <DataTable
             headers={['Workspace','Contas','Operações','Hoje','Patrimônio','TES']}
             rows={sortWorkspaces(metrics.workspaceStats).map(w => [
-              `${w.icon} ${w.name}`,
+              `${w.icon || '🎯'} ${w.name}`,
               w.accountsCount,
               w.operationsCount,
               usd(w.today),
@@ -437,7 +437,7 @@ function WorkspaceDashboard({ state, metrics, workspace }) {
   const ws = metrics.workspaceStats.find(w => w.id === workspace.id);
   if (!ws) return null;
   return (
-    <Card title={`${workspace.icon} Dashboard do Workspace`} subtitle={workspace.mission}>
+    <Card title={`${workspace.icon || '🎯'} Dashboard do Workspace`} subtitle={workspace.mission}>
       <div className="workspace-dash">
         <div><span>Progresso</span><strong>{ws.progressValue} / {workspace.target || 0}</strong><Progress value={ws.progressPercent} /></div>
         <div><span>Contas</span><strong>{ws.accountsCount}</strong><small>ativas/cadastradas</small></div>
@@ -613,7 +613,7 @@ function SessionPage({ state, update, contextId, setPage }) {
       <Card title="Preparação do pregão" subtitle="Defina o plano antes de abrir o mercado">
         <div className="form session-form">
           <select value={form.workspaceId} onChange={e=>setForm({...form,workspaceId:e.target.value})}>
-            {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
+            {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon || '🎯'} {w.name}</option>)}
           </select>
           <select value={form.accountId} onChange={e=>setForm({...form,accountId:e.target.value})}>
             {visibleAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -680,7 +680,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Centro de Comando">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — UX Fix">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -908,7 +908,7 @@ function AccountsPage({ state, update, metrics, contextId, selectedAccountId, se
       <Card title={editing ? 'Editar Conta' : 'Nova Conta'} subtitle="PA, financiada, avaliação ou capital próprio">
         <div className="form account-form">
           <select value={form.workspaceId} onChange={e=>setForm({...form,workspaceId:e.target.value})}>
-            {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
+            {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon || '🎯'} {w.name}</option>)}
           </select>
           <input placeholder="Nome da conta" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
           <input placeholder="Mesa/Corretora" value={form.broker} onChange={e=>setForm({...form,broker:e.target.value})} />
@@ -1151,10 +1151,10 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Centro de Comando ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. UX Fix ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
-  return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital.`;
+  return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital, reduzir risco e executar apenas setups A+.`;
 }
 
 function Kpi({ title, value, sub }) { return <div className="kpi"><span>{title}</span><strong>{value}</strong><small>{sub}</small></div>; }

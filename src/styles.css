@@ -257,3 +257,12 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
     grid-template-columns:1fr;
   }
 }
+
+
+/* V2.7 UX Fix */
+.table-wrap td:first-child{
+  white-space:nowrap;
+}
+.kpi small{
+  line-height:1.35;
+}
