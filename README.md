@@ -1,17 +1,12 @@
-# Almeida Trading OS — Sprint 10.1 Pregão Unificado
+# Almeida Trading OS — Sprint 10.2 Gestão de Pregão
 
 ## Entrega
-- Pregão único para várias mesas
-- Seleção de mesas no início do pregão
-- Operações vinculadas ao pregão ativo
-- Cada operação continua ligada à conta e ao Workspace
-- Resultado consolidado do pregão
-- Resultado por mesa/projeto
-- Histórico dos últimos pregões
-- Mantém Contas, Workspaces, Financeiro, Analytics e J.A.V.E.S.
-
-## Fluxo
-Pregão → Operações → Conta → Workspace
+- Editar pregão encerrado
+- Reabrir pregão encerrado
+- Excluir pregão mantendo operações
+- Excluir pregão apagando operações vinculadas
+- Ajustar mercado, objetivo, meta, loss, emocional, agenda e plano
+- Mantém arquitetura: Pregão → Operações → Conta → Workspace
 
 ## Testar
 
@@ -23,6 +18,6 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "Implementa Sprint 10.1 Pregao Unificado"
+git commit -m "Implementa Sprint 10.2 Gestao de Pregao"
 git push
 ```

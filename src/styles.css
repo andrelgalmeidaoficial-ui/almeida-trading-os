@@ -346,3 +346,14 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
     grid-template-columns:1fr;
   }
 }
+
+
+/* Sprint 10.2 Gestão de Pregão */
+.session-actions{
+  flex-wrap:wrap;
+}
+.small-btn{
+  min-height:34px;
+  padding:6px 10px;
+  font-size:12px;
+}
