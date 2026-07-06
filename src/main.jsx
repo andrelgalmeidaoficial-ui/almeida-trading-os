@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>iPad Cloud</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Values + Users</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.8</span><strong>iPad Cloud</strong></div>
+      <div className="sidebar-footer"><span>v2.9</span><strong>Values + Users</strong></div>
     </aside>
   );
 }
@@ -315,7 +315,7 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
   return (
     <header className="topbar">
       <div>
-        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'iPad Cloud'}</h1>
+        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Values + Users'}</h1>
         <p>{contextWorkspace ? contextWorkspace.mission : 'Disciplina executa. Consistência constrói.'}</p>
       </div>
       <div className="top-actions">
@@ -342,7 +342,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero command-hero">
         <div>
-          <span className="eyebrow">Almeida Trading OS • v2.8 iPad Cloud</span>
+          <span className="eyebrow">Almeida Trading OS • v2.9 Values + Users</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{isGlobal ? state.settings.motto : contextWorkspace.mission}</p>
         </div>
@@ -361,9 +361,9 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
       </div>
 
       <div className="grid four">
-        <Kpi title="Capital construído" value={usd(metrics.builtCapital)} sub={brl(metrics.builtCapital * state.settings.fx)} />
-        <Kpi title="Patrimônio real" value={usd(metrics.netWorth)} sub={isGlobal ? 'Todos os Workspaces' : contextWorkspace.name} />
-        <Kpi title="Resultado hoje" value={usd(metrics.todayResult)} sub="pregão / operações do dia" />
+        <Kpi title="Capital construído" value={<Money value={metrics.builtCapital} />} sub={brl(metrics.builtCapital * state.settings.fx)} />
+        <Kpi title="Patrimônio real" value={<Money value={metrics.netWorth} />} sub={isGlobal ? 'Todos os Workspaces' : contextWorkspace.name} />
+        <Kpi title="Resultado hoje" value={<Money value={metrics.todayResult} />} sub="pregão / operações do dia" />
         <Kpi title="TES" value={metrics.tes || 0} sub="Evolução do trader" />
       </div>
 
@@ -393,8 +393,8 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
               `${w.icon || '🎯'} ${w.name}`,
               w.accountsCount,
               w.operationsCount,
-              usd(w.today),
-              usd(w.net),
+              <Money value={w.today} />,
+              <Money value={w.net} />,
               w.tes
             ])}
           />
@@ -408,7 +408,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
             rows={metrics.visibleOperations.slice(-5).reverse().map(o => [
               o.date,
               accountName(state, o.accountId),
-              usd(o.result),
+              <Money value={o.result} />,
               o.setup || '-'
             ])}
           />
@@ -422,7 +422,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
                   <strong>{a.name}</strong>
                   <small>{a.health} • {a.status}</small>
                 </div>
-                <b>{usd(a.net)}</b>
+                <b>{<Money value={a.net} />}</b>
               </div>
             ))}
             {!metrics.visibleAccounts.length && <div className="empty">Nenhuma conta neste contexto.</div>}
@@ -560,7 +560,7 @@ function SessionPage({ state, update, contextId, setPage }) {
 
         <div className="grid four">
           <Kpi title="Início" value={started?.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} sub="início do pregão" />
-          <Kpi title="Resultado" value={usd(sessionResult)} sub="pregão atual" />
+          <Kpi title="Resultado" value={<Money value={sessionResult} />} sub="pregão atual" />
           <Kpi title="Operações" value={sessionOps.length} sub="registradas" />
           <Kpi title="Meta / Loss" value={`${usd(active.dailyTarget)} / -${usd(active.maxLoss)}`} sub="plano do dia" />
         </div>
@@ -591,7 +591,7 @@ function SessionPage({ state, update, contextId, setPage }) {
         </div>
 
         <Card title="Operações do pregão" subtitle="Somente este pregão">
-          <DataTable headers={['Data','Conta','Ativo','Setup','Resultado','Exec.','Emoc.']} rows={sessionOps.slice().reverse().map(o => [o.date, accountName(state,o.accountId), o.asset, o.setup || '-', usd(o.result), o.executionScore, o.emotionalScore])} />
+          <DataTable headers={['Data','Conta','Ativo','Setup','Resultado','Exec.','Emoc.']} rows={sessionOps.slice().reverse().map(o => [o.date, accountName(state,o.accountId), o.asset, o.setup || '-', <Money value={o.result} />, o.executionScore, o.emotionalScore])} />
         </Card>
       </div>
     );
@@ -628,7 +628,7 @@ function SessionPage({ state, update, contextId, setPage }) {
       </Card>
 
       <Card title="Últimos pregões" subtitle="Histórico recente de pregões">
-        <DataTable headers={['Data','Workspace','Resultado','Operações','Exec.','Emoc.']} rows={lastSessions.map(s => [s.date, workspaceName(state,s.workspaceId), usd(s.result), s.operationsCount, Number(s.avgExec||0).toFixed(1), Number(s.avgEmotion||0).toFixed(1)])} />
+        <DataTable headers={['Data','Workspace','Resultado','Operações','Exec.','Emoc.']} rows={lastSessions.map(s => [s.date, workspaceName(state,s.workspaceId), <Money value={s.result} />, s.operationsCount, Number(s.avgExec||0).toFixed(1), Number(s.avgEmotion||0).toFixed(1)])} />
       </Card>
     </div>
   );
@@ -680,7 +680,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — iPad Cloud">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Values + Users">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -865,16 +865,16 @@ function AccountsPage({ state, update, metrics, contextId, selectedAccountId, se
         </section>
 
         <div className="grid four">
-          <Kpi title="Patrimônio" value={usd(selectedAccount.net)} sub="real" />
-          <Kpi title="Hoje" value={usd(todayResult)} sub="resultado do dia" />
-          <Kpi title="Semana" value={usd(weekResult)} sub="últimos registros" />
-          <Kpi title="DD diário restante" value={usd(ddRemaining)} sub="estimado" />
+          <Kpi title="Patrimônio" value={<Money value={selectedAccount.net} />} sub="real" />
+          <Kpi title="Hoje" value={<Money value={todayResult} />} sub="resultado do dia" />
+          <Kpi title="Semana" value={<Money value={weekResult} />} sub="últimos registros" />
+          <Kpi title="DD diário restante" value={<Money value={ddRemaining} />} sub="estimado" />
         </div>
 
         <div className="grid two">
           <Card title="Meta de saque" subtitle="Progresso da conta">
             <div className="mission-box">
-              <h3>{selectedAccount.payoutTarget ? `${usd(selectedAccount.net)} / ${usd(selectedAccount.payoutTarget)}` : 'Meta não definida'}</h3>
+              <h3>{selectedAccount.payoutTarget ? `${<Money value={selectedAccount.net} />} / ${usd(selectedAccount.payoutTarget)}` : 'Meta não definida'}</h3>
               <Progress value={payoutProgress} />
               <small>Colchão de segurança: {usd(selectedAccount.safetyBuffer)}</small>
             </div>
@@ -896,7 +896,7 @@ function AccountsPage({ state, update, metrics, contextId, selectedAccountId, se
         <Card title="Histórico da conta" subtitle="Operações vinculadas">
           <DataTable
             headers={['Data','Ativo','Setup','Resultado','Exec.','Emoc.']}
-            rows={ops.slice().reverse().map(o => [o.date, o.asset, o.setup || '-', usd(o.result), o.executionScore, o.emotionalScore])}
+            rows={ops.slice().reverse().map(o => [o.date, o.asset, o.setup || '-', <Money value={o.result} />, o.executionScore, o.emotionalScore])}
           />
         </Card>
       </div>
@@ -973,10 +973,10 @@ function AccountsPage({ state, update, metrics, contextId, selectedAccountId, se
             a.name,
             a.type,
             a.status,
-            usd(a.initialResult),
-            usd(a.result),
-            usd(a.withdrawals),
-            usd(a.net),
+            <Money value={a.initialResult} />,
+            <Money value={a.result} />,
+            <Money value={a.withdrawals} />,
+            <Money value={a.net} />,
             <Actions onEdit={()=>edit(a)} onDelete={()=>remove(a.id)} />
           ])}
         />
@@ -1004,9 +1004,9 @@ function AccountProCard({ account, workspace, open, edit, duplicate, remove }) {
         <span>{account.accountCode || 'Sem ID'}</span>
       </div>
       <div className="account-values">
-        <div><span>Patrimônio</span><strong>{usd(account.net)}</strong></div>
-        <div><span>Hoje</span><strong>{usd(account.resultToday)}</strong></div>
-        <div><span>DD restante</span><strong>{usd(ddRemaining)}</strong></div>
+        <div><span>Patrimônio</span><strong>{<Money value={account.net} />}</strong></div>
+        <div><span>Hoje</span><strong>{<Money value={account.resultToday} />}</strong></div>
+        <div><span>DD restante</span><strong>{<Money value={ddRemaining} />}</strong></div>
         <div><span>Colchão</span><strong>{usd(account.safetyBuffer)}</strong></div>
       </div>
       <div>
@@ -1071,7 +1071,7 @@ function OperationsPage({ state, update, contextId }) {
         </div>
       </Card>
       <Card title="Operações" subtitle="Histórico filtrado pelo Workspace">
-        <DataTable headers={['Data','Conta','Ativo','Setup','Resultado','Exec.','Emoc.','Ações']} rows={operations.slice().reverse().map(o => [o.date, accountName(state, o.accountId), o.asset, o.setup || '-', usd(o.result), o.executionScore, o.emotionalScore, <Actions onEdit={()=>edit(o)} onDelete={()=>remove(o.id)} />])} />
+        <DataTable headers={['Data','Conta','Ativo','Setup','Resultado','Exec.','Emoc.','Ações']} rows={operations.slice().reverse().map(o => [o.date, accountName(state, o.accountId), o.asset, o.setup || '-', <Money value={o.result} />, o.executionScore, o.emotionalScore, <Actions onEdit={()=>edit(o)} onDelete={()=>remove(o.id)} />])} />
       </Card>
     </div>
   );
@@ -1081,13 +1081,13 @@ function FinancePage({ state, metrics }) {
   return (
     <div className="stack">
       <div className="grid four">
-        <Kpi title="Patrimônio real" value={usd(metrics.netWorth)} sub={brl(metrics.netWorth * state.settings.fx)} />
-        <Kpi title="Capital construído" value={usd(metrics.builtCapital)} sub={brl(metrics.builtCapital * state.settings.fx)} />
-        <Kpi title="Saques" value={usd(metrics.withdrawals)} sub="Total registrado" />
-        <Kpi title="Resultado hoje" value={usd(metrics.todayResult)} sub="Contexto atual" />
+        <Kpi title="Patrimônio real" value={<Money value={metrics.netWorth} />} sub={brl(metrics.netWorth * state.settings.fx)} />
+        <Kpi title="Capital construído" value={<Money value={metrics.builtCapital} />} sub={brl(metrics.builtCapital * state.settings.fx)} />
+        <Kpi title="Saques" value={<Money value={metrics.withdrawals} />} sub="Total registrado" />
+        <Kpi title="Resultado hoje" value={<Money value={metrics.todayResult} />} sub="Contexto atual" />
       </div>
       <Card title="Patrimônio por Workspace" subtitle="Consolidado">
-        <DataTable headers={['Workspace','Contas','Operações','Hoje','Patrimônio']} rows={metrics.workspaceStats.map(w => [w.name, w.accountsCount, w.operationsCount, usd(w.today), usd(w.net)])} />
+        <DataTable headers={['Workspace','Contas','Operações','Hoje','Patrimônio']} rows={metrics.workspaceStats.map(w => [w.name, w.accountsCount, w.operationsCount, <Money value={w.today} />, <Money value={w.net} />])} />
       </Card>
     </div>
   );
@@ -1116,7 +1116,7 @@ function JavesPage({ state, metrics, contextWorkspace }) {
         <div className="javes-message big"><h3>Briefing</h3><p>{dailyBrief(state, metrics, contextWorkspace)}</p></div>
       </Card>
       <Card title="Leitura atual" subtitle="Baseada nos dados registrados">
-        <DataTable headers={['Indicador','Leitura']} rows={[['TES', metrics.tes || 0], ['Execução média', metrics.avgExec.toFixed(1)], ['Emocional médio', metrics.avgEmotion.toFixed(1)], ['Patrimônio real', usd(metrics.netWorth)], ['Operações registradas', metrics.totalOps]]} />
+        <DataTable headers={['Indicador','Leitura']} rows={[['TES', metrics.tes || 0], ['Execução média', metrics.avgExec.toFixed(1)], ['Emocional médio', metrics.avgEmotion.toFixed(1)], ['Patrimônio real', <Money value={metrics.netWorth} />], ['Operações registradas', metrics.totalOps]]} />
       </Card>
     </div>
   );
@@ -1139,6 +1139,13 @@ function SettingsPage({ state, update, user }) {
           <small>Use o mesmo login do PC para sincronizar seus dados via Firebase.</small>
         </div>
       </Card>
+      <Card title="Usuários / Beta Testers" subtitle="Como suas amigas podem usar">
+        <div className="settings-box">
+          <span>Como liberar acesso agora</span>
+          <strong>Envie o link do app. Cada pessoa clica em Criar conta com o próprio e-mail.</strong>
+          <small>Os dados ficam separados por usuário no Firebase. Elas não veem seus dados e você não vê os dados delas.</small>
+        </div>
+      </Card>
       <Card title="Conta" subtitle="Firebase Auth"><div className="settings-box"><span>E-mail</span><strong>{user.email}</strong></div></Card>
     </div>
   );
@@ -1158,13 +1165,19 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. iPad Cloud ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. Values + Users ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital, reduzir risco e executar apenas setups A+.`;
 }
 
 function Kpi({ title, value, sub }) { return <div className="kpi"><span>{title}</span><strong>{value}</strong><small>{sub}</small></div>; }
+
+function Money({ value }) {
+  const n = Number(value || 0);
+  const cls = n > 0 ? 'money-positive' : n < 0 ? 'money-negative' : 'money-neutral';
+  return <span className={cls}>{usd(n)}</span>;
+}
 function Card({ title, subtitle, children }) { return <section className="card"><div className="card-head"><div><h3>{title}</h3><p>{subtitle}</p></div></div>{children}</section>; }
 function DataTable({ headers, rows }) {
   return <div className="table-wrap"><table><thead><tr>{headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((row,i)=><tr key={i}>{row.map((cell,j)=><td key={j}>{cell}</td>)}</tr>)}{!rows.length && <tr><td colSpan={headers.length}><div className="empty">Nenhum registro ainda.</div></td></tr>}</tbody></table></div>;

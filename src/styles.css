@@ -282,3 +282,18 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
   .grid.four{grid-template-columns:repeat(2,1fr)}
   .top-actions button,.top-actions select,.top-actions .ghost,.top-actions .sync{min-height:44px}
 }
+
+
+/* V2.9 Values + Users */
+.money-positive{
+  color:#22C55E;
+  font-weight:900;
+}
+.money-negative{
+  color:#EF4444;
+  font-weight:900;
+}
+.money-neutral{
+  color:#CBD5E1;
+  font-weight:800;
+}
