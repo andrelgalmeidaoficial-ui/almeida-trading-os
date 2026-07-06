@@ -1,21 +1,30 @@
-# Almeida Trading OS — V2.2 Contas PRO
+# Almeida Trading OS — V2.4 Session PRO
 
-## Entrega
-- Cards profissionais de contas
-- Abrir dashboard individual da conta
-- Editar / excluir / duplicar conta
-- Busca por conta ou ID
-- Filtro por status
-- DD diário restante estimado
-- Colchão de segurança
-- Meta de saque com progresso
-- Histórico por conta
-- Contexto por Workspace mantido
+## Entrega visível
+- Menu **Sessão PRO**
+- Botão **Executar Plano** abre a tela de sessão
+- Iniciar sessão
+- Encerrar sessão
+- Checklist operacional
+- Meta diária
+- Loss máximo
+- Registro rápido de operação
+- Operações vinculadas à sessão
+- Histórico das últimas sessões
+- Marcador visual v2.4 para confirmar que a versão entrou
 
-## Testar
+## Instalação
+
+Substitua estes arquivos/pastas no projeto:
+
+- `src`
+- `index.html`
+- `package.json`
+- `README.md`
+
+Depois rode:
 
 ```bash
-npm install
 npm run dev
 ```
 
@@ -23,6 +32,6 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "Implementa Contas PRO"
+git commit -m "Implementa Session PRO v2.4"
 git push
 ```

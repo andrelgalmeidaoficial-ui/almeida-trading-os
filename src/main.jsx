@@ -276,7 +276,7 @@ function App() {
 function Sidebar({ page, setPage }) {
   const items = [
     ['home', Home, 'Home'],
-    ['session', ClipboardCheck, 'Sessão'],
+    ['session', ClipboardCheck, 'Sessão PRO'],
     ['workspaces', Briefcase, 'Workspaces'],
     ['accounts', Wallet, 'Contas'],
     ['operations', Activity, 'Operações'],
@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Workspace PRO</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Session PRO</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.1</span><strong>Workspace PRO</strong></div>
+      <div className="sidebar-footer"><span>v2.4</span><strong>Session PRO</strong></div>
     </aside>
   );
 }
@@ -339,7 +339,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero">
         <div>
-          <span className="eyebrow">{contextWorkspace ? 'Workspace ativo' : 'Almeida Trading OS'}</span>
+          <span className="eyebrow">{contextWorkspace ? 'Workspace ativo' : 'Almeida Trading OS • v2.4 Session PRO'}</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{contextWorkspace ? contextWorkspace.notes : state.settings.motto}</p>
         </div>
@@ -493,7 +493,7 @@ function SessionPage({ state, update, contextId, setPage }) {
         <section className="session-hero active-session">
           <div>
             <span className="eyebrow">Sessão ativa</span>
-            <h2>Executando Plano</h2>
+            <h2>Sessão Ativa</h2>
             <p>{workspaceName(state, active.workspaceId)} • {accountName(state, active.accountId)}</p>
           </div>
           <button className="danger" onClick={finishSession}><StopCircle size={18}/> Encerrar Sessão</button>
@@ -621,7 +621,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Workspace PRO">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Session PRO">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -1092,7 +1092,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Workspace PRO ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. Session PRO ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital.`;
