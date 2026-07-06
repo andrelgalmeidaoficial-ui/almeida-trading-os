@@ -1,27 +1,17 @@
-# Almeida Trading OS — Sprint 10.3 Pregão Unificado REAL
+# Almeida Trading OS — Sprint 10.4 Reabrir Pregão Fix
 
-## Entrega
-- Pregão único para várias mesas
-- Seleção de mesas no início
-- Operação rápida por conta
-- Resultado consolidado
-- Resultado por mesa
-- Histórico de pregões
-- Editar pregão
-- Reabrir pregão
-- Excluir pregão mantendo operações
-- Excluir pregão apagando operações vinculadas
-
-## Testar
-
-```bash
-npm run dev
-```
+## Correção
+- Corrige tela branca ao reabrir pregões antigos
+- Adiciona fallback para checklist ausente
+- Adiciona fallback para workspaceIds ausente
+- Mantém mercado e objetivo padrão se vierem vazios
+- Reabrir pregão agora restaura estrutura segura
 
 ## Publicar
 
 ```bash
+npm run dev
 git add .
-git commit -m "Implementa Sprint 10.3 Pregao Unificado REAL"
+git commit -m "Corrige reabrir pregao Sprint 10.4"
 git push
 ```
