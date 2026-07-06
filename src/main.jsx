@@ -276,7 +276,7 @@ function App() {
 function Sidebar({ page, setPage }) {
   const items = [
     ['home', Home, 'Home'],
-    ['session', ClipboardCheck, 'Pregão'],
+    ['session', ClipboardCheck, 'Pregão Unificado'],
     ['workspaces', Briefcase, 'Workspaces'],
     ['accounts', Wallet, 'Contas'],
     ['operations', Activity, 'Operações'],
@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Values Fix</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Pregão Unificado REAL</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.9.1</span><strong>Values Fix</strong></div>
+      <div className="sidebar-footer"><span>Sprint 10.3</span><strong>Pregão Unificado REAL</strong></div>
     </aside>
   );
 }
@@ -315,7 +315,7 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
   return (
     <header className="topbar">
       <div>
-        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Values Fix'}</h1>
+        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Pregão Unificado REAL'}</h1>
         <p>{contextWorkspace ? contextWorkspace.mission : 'Disciplina executa. Consistência constrói.'}</p>
       </div>
       <div className="top-actions">
@@ -342,7 +342,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero command-hero">
         <div>
-          <span className="eyebrow">Almeida Trading OS • v2.9.1 Values Fix</span>
+          <span className="eyebrow">Almeida Trading OS • Sprint 10.3 Pregão Unificado REAL</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{isGlobal ? state.settings.motto : contextWorkspace.mission}</p>
         </div>
@@ -451,23 +451,26 @@ function WorkspaceDashboard({ state, metrics, workspace }) {
 }
 
 
+
 function SessionPage({ state, update, contextId, setPage }) {
-  const visibleAccounts = contextId === 'all' ? state.accounts : state.accounts.filter(a => a.workspaceId === contextId);
   const active = state.activeSession;
 
   const [form, setForm] = useState({
-    workspaceId: contextId === 'all' ? state.workspaces[0]?.id || '' : contextId,
-    accountId: visibleAccounts[0]?.id || '',
+    market: 'NQ',
     objective: 'Executar apenas setups A+',
     dailyTarget: 300,
     maxLoss: 180,
     emotionalStart: 7,
     marketNotes: '',
-    plan: ''
+    plan: '',
+    workspaceIds: state.workspaces.map(w => w.id)
   });
 
+  const selectedWorkspaceIds = active?.workspaceIds?.length ? active.workspaceIds : form.workspaceIds;
+  const accountsAvailable = state.accounts.filter(a => selectedWorkspaceIds.includes(a.workspaceId));
+
   const [quickOp, setQuickOp] = useState({
-    accountId: visibleAccounts[0]?.id || '',
+    accountId: accountsAvailable[0]?.id || '',
     asset:'NQ',
     setup:'',
     result:'',
@@ -480,25 +483,39 @@ function SessionPage({ state, update, contextId, setPage }) {
     notes:''
   });
 
+  const [editingSessionId, setEditingSessionId] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+
   useEffect(() => {
-    if (!active && visibleAccounts[0]) {
-      setForm(f => ({ ...f, workspaceId: contextId === 'all' ? f.workspaceId : contextId, accountId: visibleAccounts[0].id }));
-      setQuickOp(q => ({ ...q, accountId: visibleAccounts[0].id }));
+    const first = accountsAvailable[0]?.id || '';
+    if (first && !accountsAvailable.some(a => a.id === quickOp.accountId)) {
+      setQuickOp(q => ({ ...q, accountId: first }));
     }
-  }, [contextId, visibleAccounts.length, active]);
+  }, [selectedWorkspaceIds.join(','), accountsAvailable.length]);
+
+  function toggleWorkspace(id) {
+    setForm(f => {
+      const exists = f.workspaceIds.includes(id);
+      const next = exists ? f.workspaceIds.filter(x => x !== id) : [...f.workspaceIds, id];
+      return { ...f, workspaceIds: next };
+    });
+  }
 
   function startSession() {
-    if (!form.accountId) return alert('Cadastre ou selecione uma conta.');
+    if (!form.workspaceIds.length) return alert('Selecione pelo menos uma mesa/projeto.');
+    const validAccounts = state.accounts.filter(a => form.workspaceIds.includes(a.workspaceId));
+    if (!validAccounts.length) return alert('Cadastre pelo menos uma conta nas mesas selecionadas.');
     const session = {
       ...form,
-      id: uid('session'),
+      id: uid('pregao'),
       date: new Date().toISOString().slice(0,10),
       startedAt: new Date().toISOString(),
       endedAt: null,
-      status: 'Ativa',
-      checklist: { market:false, plan:false, risk:false, aplus:false }
+      status: 'Ativo',
+      checklist: { market:false, dxy:false, bigs:false, agenda:false, aplus:false }
     };
     update(s => { s.activeSession = session; });
+    setQuickOp(q => ({ ...q, accountId: validAccounts[0].id, asset: form.market || 'NQ' }));
   }
 
   function toggleCheck(key) {
@@ -509,7 +526,7 @@ function SessionPage({ state, update, contextId, setPage }) {
   }
 
   function saveQuickOperation() {
-    if (!active) return alert('Inicie uma sessão primeiro.');
+    if (!active) return alert('Inicie um pregão primeiro.');
     if (!quickOp.accountId) return alert('Selecione uma conta.');
     const op = {
       ...quickOp,
@@ -533,17 +550,82 @@ function SessionPage({ state, update, contextId, setPage }) {
     if (!active) return;
     const ops = state.operations.filter(o => o.sessionId === active.id);
     const result = ops.reduce((sum,o)=>sum + Number(o.result || 0), 0);
+    const wins = ops.filter(o => Number(o.result || 0) > 0).length;
+    const losses = ops.filter(o => Number(o.result || 0) < 0).length;
+    const winRate = ops.length ? Math.round((wins / ops.length) * 100) : 0;
     const avgExec = avg(ops.map(o => o.executionScore));
     const avgEmotion = avg(ops.map(o => o.emotionalScore));
-    const summary = { ...active, endedAt: new Date().toISOString(), status:'Encerrada', result, operationsCount: ops.length, avgExec, avgEmotion };
+    const summary = { ...active, endedAt: new Date().toISOString(), status:'Encerrado', result, operationsCount: ops.length, wins, losses, winRate, avgExec, avgEmotion };
     update(s => {
+      s.sessions = s.sessions || [];
       s.sessions.push(summary);
       s.activeSession = null;
     });
   }
 
+  function startEditSession(session) {
+    setEditingSessionId(session.id);
+    setEditForm({
+      market: session.market || 'NQ',
+      objective: session.objective || '',
+      dailyTarget: session.dailyTarget || 0,
+      maxLoss: session.maxLoss || 0,
+      emotionalStart: session.emotionalStart || 0,
+      marketNotes: session.marketNotes || '',
+      plan: session.plan || '',
+      workspaceIds: session.workspaceIds || []
+    });
+  }
+
+  function cancelEditSession() {
+    setEditingSessionId(null);
+    setEditForm(null);
+  }
+
+  function saveEditSession() {
+    if (!editingSessionId || !editForm) return;
+    update(s => {
+      const idx = (s.sessions || []).findIndex(sess => sess.id === editingSessionId);
+      if (idx >= 0) {
+        s.sessions[idx] = {
+          ...s.sessions[idx],
+          ...editForm,
+          dailyTarget: Number(editForm.dailyTarget || 0),
+          maxLoss: Number(editForm.maxLoss || 0),
+          emotionalStart: Number(editForm.emotionalStart || 0)
+        };
+      }
+    });
+    cancelEditSession();
+  }
+
+  function deleteSession(sessionId, deleteOperations=false) {
+    const msg = deleteOperations
+      ? 'Excluir este pregão e apagar TODAS as operações vinculadas?'
+      : 'Excluir este pregão mantendo as operações vinculadas?';
+    if (!confirm(msg)) return;
+    update(s => {
+      s.sessions = (s.sessions || []).filter(sess => sess.id !== sessionId);
+      if (deleteOperations) {
+        s.operations = s.operations.filter(op => op.sessionId !== sessionId);
+      } else {
+        s.operations = s.operations.map(op => op.sessionId === sessionId ? { ...op, sessionId:null } : op);
+      }
+    });
+  }
+
+  function reopenSession(session) {
+    if (state.activeSession && !confirm('Já existe um pregão ativo. Substituir pelo pregão selecionado?')) return;
+    update(s => {
+      s.sessions = (s.sessions || []).filter(sess => sess.id !== session.id);
+      s.activeSession = { ...session, status:'Ativo', endedAt:null };
+    });
+  }
+
   const sessionOps = active ? state.operations.filter(o => o.sessionId === active.id) : [];
   const sessionResult = sessionOps.reduce((sum,o)=>sum + Number(o.result || 0), 0);
+  const accountIds = [...new Set(sessionOps.map(o => o.accountId))];
+  const workspaceIdsUsed = [...new Set(accountIds.map(id => state.accounts.find(a => a.id === id)?.workspaceId).filter(Boolean))];
   const started = active ? new Date(active.startedAt) : null;
 
   if (active) {
@@ -551,34 +633,35 @@ function SessionPage({ state, update, contextId, setPage }) {
       <div className="stack">
         <section className="session-hero active-session">
           <div>
-            <span className="eyebrow">Pregão em andamento</span>
+            <span className="eyebrow">Sprint 10.3 • Pregão Unificado REAL</span>
             <h2>Pregão em Andamento</h2>
-            <p>{workspaceName(state, active.workspaceId)} • {accountName(state, active.accountId)}</p>
+            <p>{active.market} • {active.objective}</p>
           </div>
           <button className="danger" onClick={finishSession}><StopCircle size={18}/> 🛑 Encerrar Pregão</button>
         </section>
 
         <div className="grid four">
-          <Kpi title="Início" value={started?.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} sub="início do pregão" />
-          <Kpi title="Resultado" value={<Money value={sessionResult} />} sub="pregão atual" />
-          <Kpi title="Operações" value={sessionOps.length} sub="registradas" />
-          <Kpi title="Meta / Loss" value={`${usd(active.dailyTarget)} / -${usd(active.maxLoss)}`} sub="plano do dia" />
+          <Kpi title="Início" value={started?.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} sub="horário do pregão" />
+          <Kpi title="Resultado Geral" value={<Money value={sessionResult} />} sub="todas as mesas" />
+          <Kpi title="Operações" value={sessionOps.length} sub={`${accountIds.length} conta(s) usadas`} />
+          <Kpi title="Mesas" value={workspaceIdsUsed.length || active.workspaceIds.length} sub="mesas/projetos ativos" />
         </div>
 
         <div className="grid two">
-          <Card title="Checklist de execução" subtitle="Antes e durante a sessão">
+          <Card title="Checklist do pregão" subtitle="Leitura única para várias mesas">
             <div className="checklist session-checklist">
               <label><input type="checkbox" checked={active.checklist.market} onChange={()=>toggleCheck('market')} /> Mercado analisado</label>
-              <label><input type="checkbox" checked={active.checklist.plan} onChange={()=>toggleCheck('plan')} /> Plano revisado</label>
-              <label><input type="checkbox" checked={active.checklist.risk} onChange={()=>toggleCheck('risk')} /> Risco definido</label>
+              <label><input type="checkbox" checked={active.checklist.dxy} onChange={()=>toggleCheck('dxy')} /> DXY analisado</label>
+              <label><input type="checkbox" checked={active.checklist.bigs} onChange={()=>toggleCheck('bigs')} /> Big Techs analisadas</label>
+              <label><input type="checkbox" checked={active.checklist.agenda} onChange={()=>toggleCheck('agenda')} /> Agenda econômica revisada</label>
               <label><input type="checkbox" checked={active.checklist.aplus} onChange={()=>toggleCheck('aplus')} /> Setup A+ somente</label>
             </div>
           </Card>
 
-          <Card title="Operação rápida" subtitle="Registrar em poucos segundos">
+          <Card title="Operação rápida" subtitle="Escolha a conta; a mesa vem junto">
             <div className="form session-op-form">
               <select value={quickOp.accountId} onChange={e=>setQuickOp({...quickOp,accountId:e.target.value})}>
-                {visibleAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                {accountsAvailable.map(a => <option key={a.id} value={a.id}>{workspaceName(state, a.workspaceId)} • {a.name}</option>)}
               </select>
               <input placeholder="Ativo" value={quickOp.asset} onChange={e=>setQuickOp({...quickOp,asset:e.target.value})} />
               <input placeholder="Setup" value={quickOp.setup} onChange={e=>setQuickOp({...quickOp,setup:e.target.value})} />
@@ -590,34 +673,47 @@ function SessionPage({ state, update, contextId, setPage }) {
           </Card>
         </div>
 
-        <Card title="Operações do pregão" subtitle="Somente este pregão">
-          <DataTable headers={['Data','Conta','Ativo','Setup','Resultado','Exec.','Emoc.']} rows={sessionOps.slice().reverse().map(o => [o.date, accountName(state,o.accountId), o.asset, o.setup || '-', <Money value={o.result} />, o.executionScore, o.emotionalScore])} />
+        <Card title="Resultado por mesa" subtitle="Mesmo pregão, várias contas">
+          <DataTable
+            headers={['Mesa/Projeto','Operações','Resultado']}
+            rows={active.workspaceIds.map(wid => {
+              const accs = state.accounts.filter(a => a.workspaceId === wid).map(a => a.id);
+              const ops = sessionOps.filter(o => accs.includes(o.accountId));
+              const res = ops.reduce((sum,o)=>sum + Number(o.result || 0), 0);
+              return [workspaceName(state, wid), ops.length, <Money value={res} />];
+            })}
+          />
+        </Card>
+
+        <Card title="Operações do pregão" subtitle="Todas as mesas em uma única sessão">
+          <DataTable
+            headers={['Data','Mesa','Conta','Ativo','Setup','Resultado','Exec.','Emoc.']}
+            rows={sessionOps.slice().reverse().map(o => {
+              const acc = state.accounts.find(a => a.id === o.accountId);
+              return [o.date, workspaceName(state, acc?.workspaceId), accountName(state,o.accountId), o.asset, o.setup || '-', <Money value={o.result} />, o.executionScore, o.emotionalScore];
+            })}
+          />
         </Card>
       </div>
     );
   }
 
-  const lastSessions = state.sessions.slice(-5).reverse();
+  const lastSessions = (state.sessions || []).slice(-5).reverse();
 
   return (
     <div className="stack">
       <section className="session-hero">
         <div>
-          <span className="eyebrow">Modo Pregão</span>
+          <span className="eyebrow">Sprint 10.3 • Pregão Unificado REAL</span>
           <h2>🚀 Iniciar Pregão</h2>
-          <p>Abra o pregão, registre operações rápidas e encerre com resumo automático.</p>
+          <p>Um único pregão pode conter operações em Apex, Mide, TradeDay, Lucid e outras mesas.</p>
         </div>
         <button onClick={startSession}><PlayCircle size={18}/> 🚀 Iniciar Pregão</button>
       </section>
 
-      <Card title="Preparação do pregão" subtitle="Defina o plano antes de abrir o mercado">
+      <Card title="Preparação do pregão" subtitle="A leitura é única; as execuções podem ser em várias mesas">
         <div className="form session-form">
-          <select value={form.workspaceId} onChange={e=>setForm({...form,workspaceId:e.target.value})}>
-            {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon || '🎯'} {w.name}</option>)}
-          </select>
-          <select value={form.accountId} onChange={e=>setForm({...form,accountId:e.target.value})}>
-            {visibleAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
+          <input placeholder="Mercado / Ativo principal" value={form.market} onChange={e=>setForm({...form,market:e.target.value})} />
           <input placeholder="Objetivo do dia" value={form.objective} onChange={e=>setForm({...form,objective:e.target.value})} />
           <input type="number" placeholder="Meta diária USD" value={form.dailyTarget} onChange={e=>setForm({...form,dailyTarget:e.target.value})} />
           <input type="number" placeholder="Loss máximo USD" value={form.maxLoss} onChange={e=>setForm({...form,maxLoss:e.target.value})} />
@@ -627,12 +723,57 @@ function SessionPage({ state, update, contextId, setPage }) {
         </div>
       </Card>
 
-      <Card title="Últimos pregões" subtitle="Histórico recente de pregões">
-        <DataTable headers={['Data','Workspace','Resultado','Operações','Exec.','Emoc.']} rows={lastSessions.map(s => [s.date, workspaceName(state,s.workspaceId), <Money value={s.result} />, s.operationsCount, Number(s.avgExec||0).toFixed(1), Number(s.avgEmotion||0).toFixed(1)])} />
+      <Card title="Mesas deste pregão" subtitle="Selecione as mesas que poderão receber operações">
+        <div className="workspace-check-grid">
+          {state.workspaces.map(w => (
+            <label key={w.id} className={form.workspaceIds.includes(w.id) ? 'workspace-check active' : 'workspace-check'}>
+              <input type="checkbox" checked={form.workspaceIds.includes(w.id)} onChange={()=>toggleWorkspace(w.id)} />
+              <span>{w.icon || '🎯'} {w.name}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      {editingSessionId && editForm && (
+        <Card title="Editar pregão encerrado" subtitle="Ajuste mercado, meta, loss e observações">
+          <div className="form session-form">
+            <input placeholder="Mercado" value={editForm.market} onChange={e=>setEditForm({...editForm,market:e.target.value})} />
+            <input placeholder="Objetivo" value={editForm.objective} onChange={e=>setEditForm({...editForm,objective:e.target.value})} />
+            <input type="number" placeholder="Meta diária USD" value={editForm.dailyTarget} onChange={e=>setEditForm({...editForm,dailyTarget:e.target.value})} />
+            <input type="number" placeholder="Loss máximo USD" value={editForm.maxLoss} onChange={e=>setEditForm({...editForm,maxLoss:e.target.value})} />
+            <input type="number" placeholder="Emocional inicial 0-10" value={editForm.emotionalStart} onChange={e=>setEditForm({...editForm,emotionalStart:e.target.value})} />
+            <input placeholder="Notícias / agenda" value={editForm.marketNotes} onChange={e=>setEditForm({...editForm,marketNotes:e.target.value})} />
+            <input placeholder="Plano" value={editForm.plan} onChange={e=>setEditForm({...editForm,plan:e.target.value})} />
+            <button onClick={saveEditSession}><Save size={15}/> Salvar alterações</button>
+            <button className="secondary" onClick={cancelEditSession}><X size={15}/> Cancelar</button>
+          </div>
+        </Card>
+      )}
+
+      <Card title="Últimos pregões" subtitle="Editar, reabrir ou excluir">
+        <DataTable
+          headers={['Data','Mercado','Resultado','Operações','Win Rate','Exec.','Emoc.','Ações']}
+          rows={lastSessions.map(s => [
+            s.date,
+            s.market || 'NQ',
+            <Money value={s.result} />,
+            s.operationsCount,
+            `${s.winRate || 0}%`,
+            Number(s.avgExec||0).toFixed(1),
+            Number(s.avgEmotion||0).toFixed(1),
+            <div className="actions session-actions">
+              <IconButton onClick={()=>startEditSession(s)} icon={<Edit3 size={15}/>} />
+              <button className="secondary small-btn" onClick={()=>reopenSession(s)}>Reabrir</button>
+              <IconButton danger onClick={()=>deleteSession(s.id,false)} icon={<Trash2 size={15}/>} />
+              <button className="danger small-btn" onClick={()=>deleteSession(s.id,true)}>Apagar tudo</button>
+            </div>
+          ])}
+        />
       </Card>
     </div>
   );
 }
+
 
 function WorkspacesPage({ state, update, setContextId, setPage }) {
   const empty = { name:'', icon:'🎯', type:'Mesa Proprietária', status:'Ativo', mission:'', target:0, progressManual:0, color:'blue', favorite:false, notes:'' };
@@ -680,7 +821,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Values Fix">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Pregão Unificado REAL">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -1165,7 +1306,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Values Fix ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. Pregão Unificado REAL ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital, reduzir risco e executar apenas setups A+.`;

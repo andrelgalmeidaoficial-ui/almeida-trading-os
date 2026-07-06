@@ -315,7 +315,7 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
 }
 
 
-/* Sprint 10.1 Pregão Unificado */
+/* Sprint 10.3 Pregão Unificado REAL */
 .workspace-check-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -341,19 +341,8 @@ input,select{min-height:42px;background:#0A1020;border:1px solid var(--line);col
   width:18px;
   height:18px;
 }
+.session-actions{flex-wrap:wrap}
+.small-btn{min-height:34px;padding:6px 10px;font-size:12px}
 @media(max-width:760px){
-  .workspace-check-grid{
-    grid-template-columns:1fr;
-  }
-}
-
-
-/* Sprint 10.2 Gestão de Pregão */
-.session-actions{
-  flex-wrap:wrap;
-}
-.small-btn{
-  min-height:34px;
-  padding:6px 10px;
-  font-size:12px;
+  .workspace-check-grid{grid-template-columns:1fr}
 }
