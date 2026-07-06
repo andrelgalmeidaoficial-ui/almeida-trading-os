@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Engine Base</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>iPad Cloud</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.8</span><strong>Engine Base</strong></div>
+      <div className="sidebar-footer"><span>v2.8</span><strong>iPad Cloud</strong></div>
     </aside>
   );
 }
@@ -315,7 +315,7 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
   return (
     <header className="topbar">
       <div>
-        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Engine Base'}</h1>
+        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'iPad Cloud'}</h1>
         <p>{contextWorkspace ? contextWorkspace.mission : 'Disciplina executa. Consistência constrói.'}</p>
       </div>
       <div className="top-actions">
@@ -342,7 +342,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero command-hero">
         <div>
-          <span className="eyebrow">Almeida Trading OS • v2.8 Engine Base</span>
+          <span className="eyebrow">Almeida Trading OS • v2.8 iPad Cloud</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{isGlobal ? state.settings.motto : contextWorkspace.mission}</p>
         </div>
@@ -383,17 +383,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
         </Card>
       </div>
 
-      
-      <Card title="Engine v2.8" subtitle="Motor interno preparado">
-        <div className="engine-grid">
-          <div><strong>TES</strong><small>Cálculo separado</small></div>
-          <div><strong>Financeiro</strong><small>Patrimônio e saúde</small></div>
-          <div><strong>Pregão</strong><small>Resumo por sessão</small></div>
-          <div><strong>J.A.V.E.S.</strong><small>Regras iniciais</small></div>
-        </div>
-      </Card>
-
-{!isGlobal && <WorkspaceDashboard state={state} metrics={metrics} workspace={contextWorkspace} />}
+      {!isGlobal && <WorkspaceDashboard state={state} metrics={metrics} workspace={contextWorkspace} />}
 
       {isGlobal && (
         <Card title="Workspaces" subtitle="Escolha uma mesa/projeto no topo ou abra a tela Workspaces">
@@ -690,7 +680,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Engine Base">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — iPad Cloud">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -1142,6 +1132,13 @@ function SettingsPage({ state, update, user }) {
       <Card title="Configurações" subtitle="Perfil e sistema">
         <div className="form"><input value={name} onChange={e=>setName(e.target.value)} placeholder="Nome" /><input type="number" value={fx} onChange={e=>setFx(e.target.value)} placeholder="Cotação USD/BRL" /><input value={motto} onChange={e=>setMotto(e.target.value)} placeholder="Lema" /><button onClick={save}><Save size={15} /> Salvar</button></div>
       </Card>
+      <Card title="iPad / PWA" subtitle="Instalar como aplicativo">
+        <div className="settings-box">
+          <span>Como instalar no iPad</span>
+          <strong>Safari → Compartilhar → Adicionar à Tela de Início</strong>
+          <small>Use o mesmo login do PC para sincronizar seus dados via Firebase.</small>
+        </div>
+      </Card>
       <Card title="Conta" subtitle="Firebase Auth"><div className="settings-box"><span>E-mail</span><strong>{user.email}</strong></div></Card>
     </div>
   );
@@ -1161,7 +1158,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Engine Base ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. iPad Cloud ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital, reduzir risco e executar apenas setups A+.`;

@@ -1,34 +1,20 @@
-# Almeida Trading OS — V2.8 Engine Base
+# Almeida Trading OS — V2.8 iPad Cloud
 
 ## Entrega
-- Cria pasta `src/engine`
-- Separa regras iniciais de:
-  - TES
-  - Financeiro
-  - J.A.V.E.S.
-  - Pregão
-- Adiciona card visual Engine v2.8 no Dashboard
-- Mantém V2.7 funcionando
-- Prepara o projeto para as próximas sprints sem continuar inchando o `main.jsx`
-
-## Arquivos novos
-
-- `src/engine/tes.js`
-- `src/engine/finance.js`
-- `src/engine/javesRules.js`
-- `src/engine/sessionEngine.js`
-
-## Testar
-
-```bash
-npm install
-npm run dev
-```
+- Preparação PWA para iPad
+- Manifest para instalar na Tela de Início
+- Service Worker básico
+- Ícone AT
+- Meta tags Apple
+- Ajustes responsivos para iPad
+- Card em Configurações ensinando instalação no iPad
+- Mantém sincronização Firebase
 
 ## Publicar
 
 ```bash
+npm run dev
 git add .
-git commit -m "Implementa Engine Base v2.8"
+git commit -m "Implementa iPad Cloud v2.8"
 git push
 ```
