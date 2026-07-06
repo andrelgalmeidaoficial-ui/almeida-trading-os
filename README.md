@@ -1,23 +1,16 @@
-# Almeida Trading OS — V2.9 Values + Users
+# Almeida Trading OS — V2.9.1 Values Fix
 
-## Entrega
-- Valores positivos em verde
-- Valores negativos em vermelho
-- Valores neutros em cinza
-- Card em Configurações explicando como amigas/beta testers usam o app
-- Mantém isolamento por usuário no Firebase
-
-## Como suas amigas usam
-1. Envie o link do app.
-2. Elas clicam em Criar conta.
-3. Cada uma usa o próprio e-mail e senha.
-4. Cada usuário tem dados separados no Firebase.
+## Correções
+- Home: Capital construído, Patrimônio real e Resultado hoje com cores
+- Workspaces: Hoje e Patrimônio com cores
+- Analytics: resultado por setup com cores
+- Tabelas: valores positivos/negativos destacados
 
 ## Publicar
 
 ```bash
 npm run dev
 git add .
-git commit -m "Implementa valores coloridos e usuários v2.9"
+git commit -m "Corrige cores de valores v2.9.1"
 git push
 ```

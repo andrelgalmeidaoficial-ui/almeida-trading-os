@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Values + Users</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Values Fix</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>v2.9</span><strong>Values + Users</strong></div>
+      <div className="sidebar-footer"><span>v2.9.1</span><strong>Values Fix</strong></div>
     </aside>
   );
 }
@@ -315,7 +315,7 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
   return (
     <header className="topbar">
       <div>
-        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Values + Users'}</h1>
+        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Values Fix'}</h1>
         <p>{contextWorkspace ? contextWorkspace.mission : 'Disciplina executa. Consistência constrói.'}</p>
       </div>
       <div className="top-actions">
@@ -342,7 +342,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero command-hero">
         <div>
-          <span className="eyebrow">Almeida Trading OS • v2.9 Values + Users</span>
+          <span className="eyebrow">Almeida Trading OS • v2.9.1 Values Fix</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{isGlobal ? state.settings.motto : contextWorkspace.mission}</p>
         </div>
@@ -680,7 +680,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Values + Users">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Values Fix">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -738,8 +738,8 @@ function WorkspaceProCard({ workspace, open, edit, remove, duplicate, favorite, 
       <Progress value={workspace.progressPercent || 0} />
       <div className="ws-stats">
         <div><span>Contas</span><strong>{workspace.accountsCount}</strong></div>
-        <div><span>Patrimônio</span><strong>{usd(workspace.net)}</strong></div>
-        <div><span>Hoje</span><strong>{usd(workspace.today)}</strong></div>
+        <div><span>Patrimônio</span><strong>{<Money value={workspace.net} />}</strong></div>
+        <div><span>Hoje</span><strong>{<Money value={workspace.today} />}</strong></div>
         <div><span>TES</span><strong>{workspace.tes}</strong></div>
       </div>
       <div className="ws-footer">
@@ -1103,7 +1103,7 @@ function AnalyticsPage({ metrics, state }) {
         <Kpi title="Risco" value={metrics.avgRisk.toFixed(1)} sub="Média" />
       </div>
       <Card title="Resultado por Setup" subtitle="Primeira leitura de performance">
-        <DataTable headers={['Setup','Resultado','Operações']} rows={Object.values(metrics.visibleOperations.reduce((acc, op) => { const key = op.setup || 'Sem setup'; acc[key] = acc[key] || { setup:key, result:0, count:0 }; acc[key].result += Number(op.result || 0); acc[key].count += 1; return acc; }, {})).map(r => [r.setup, usd(r.result), r.count])} />
+        <DataTable headers={['Setup','Resultado','Operações']} rows={Object.values(metrics.visibleOperations.reduce((acc, op) => { const key = op.setup || 'Sem setup'; acc[key] = acc[key] || { setup:key, result:0, count:0 }; acc[key].result += Number(op.result || 0); acc[key].count += 1; return acc; }, {})).map(r => [r.setup, <Money value={r.result} />, r.count])} />
       </Card>
     </div>
   );
@@ -1165,7 +1165,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Values + Users ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. Values Fix ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital, reduzir risco e executar apenas setups A+.`;
