@@ -32,6 +32,8 @@ import {
   Download,
   Upload,
   PlayCircle,
+  StopCircle,
+  ClipboardCheck,
   ArrowLeft,
   TrendingUp
 } from 'lucide-react';
@@ -68,6 +70,8 @@ const initialState = {
     { id: 'acc-apex-pa01', workspaceId: 'apex', name: 'Apex PA01', broker: 'Apex', accountCode: 'PA01', type: 'PA', status: 'Ativa', nominalBalance: 50000, initialResult: 0, safetyBuffer: 500, maxDailyLoss: 1100, notes: '' }
   ],
   operations: [],
+  sessions: [],
+  activeSession: null,
   updatedAt: new Date().toISOString()
 };
 
@@ -201,7 +205,9 @@ function App() {
           settings: { ...initialState.settings, ...(data.settings || {}) },
           workspaces: mergedWorkspaces,
           accounts: data.accounts || [],
-          operations: data.operations || []
+          operations: data.operations || [],
+          sessions: data.sessions || [],
+          activeSession: data.activeSession || null
         });
         setSync('Sincronizado');
       } else {
@@ -251,6 +257,7 @@ function App() {
         <div className="content-grid">
           <section className="content">
             {page === 'home' && <HomePage state={state} metrics={metrics} setPage={setPage} contextWorkspace={contextWorkspace} contextId={contextId} />}
+            {page === 'session' && <SessionPage state={state} update={update} contextId={contextId} setPage={setPage} />}
             {page === 'workspaces' && <WorkspacesPage state={state} update={update} setContextId={setContextId} setPage={setPage} />}
             {page === 'accounts' && <AccountsPage state={state} update={update} metrics={metrics} contextId={contextId} selectedAccountId={selectedAccountId} setSelectedAccountId={setSelectedAccountId} />}
             {page === 'operations' && <OperationsPage state={state} update={update} contextId={contextId} />}
@@ -269,6 +276,7 @@ function App() {
 function Sidebar({ page, setPage }) {
   const items = [
     ['home', Home, 'Home'],
+    ['session', ClipboardCheck, 'Sessão'],
     ['workspaces', Briefcase, 'Workspaces'],
     ['accounts', Wallet, 'Contas'],
     ['operations', Activity, 'Operações'],
@@ -335,7 +343,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{contextWorkspace ? contextWorkspace.notes : state.settings.motto}</p>
         </div>
-        <button onClick={()=>setPage('operations')}><PlayCircle size={18} /> Executar Plano</button>
+        <button onClick={()=>setPage('session')}><PlayCircle size={18} /> Executar Plano</button>
       </section>
 
       <div className="grid four">
@@ -380,6 +388,190 @@ function WorkspaceDashboard({ state, metrics, workspace }) {
         <div><span>TES</span><strong>{ws.tes}</strong><small>evolução</small></div>
       </div>
     </Card>
+  );
+}
+
+
+function SessionPage({ state, update, contextId, setPage }) {
+  const visibleAccounts = contextId === 'all' ? state.accounts : state.accounts.filter(a => a.workspaceId === contextId);
+  const active = state.activeSession;
+
+  const [form, setForm] = useState({
+    workspaceId: contextId === 'all' ? state.workspaces[0]?.id || '' : contextId,
+    accountId: visibleAccounts[0]?.id || '',
+    objective: 'Executar apenas setups A+',
+    dailyTarget: 300,
+    maxLoss: 180,
+    emotionalStart: 7,
+    marketNotes: '',
+    plan: ''
+  });
+
+  const [quickOp, setQuickOp] = useState({
+    accountId: visibleAccounts[0]?.id || '',
+    asset:'NQ',
+    setup:'',
+    result:'',
+    trades:1,
+    contracts:1,
+    executionScore:8,
+    emotionalScore:8,
+    riskScore:8,
+    disciplineScore:8,
+    notes:''
+  });
+
+  useEffect(() => {
+    if (!active && visibleAccounts[0]) {
+      setForm(f => ({ ...f, workspaceId: contextId === 'all' ? f.workspaceId : contextId, accountId: visibleAccounts[0].id }));
+      setQuickOp(q => ({ ...q, accountId: visibleAccounts[0].id }));
+    }
+  }, [contextId, visibleAccounts.length, active]);
+
+  function startSession() {
+    if (!form.accountId) return alert('Cadastre ou selecione uma conta.');
+    const session = {
+      ...form,
+      id: uid('session'),
+      date: new Date().toISOString().slice(0,10),
+      startedAt: new Date().toISOString(),
+      endedAt: null,
+      status: 'Ativa',
+      checklist: { market:false, plan:false, risk:false, aplus:false }
+    };
+    update(s => { s.activeSession = session; });
+  }
+
+  function toggleCheck(key) {
+    update(s => {
+      if (!s.activeSession) return;
+      s.activeSession.checklist[key] = !s.activeSession.checklist[key];
+    });
+  }
+
+  function saveQuickOperation() {
+    if (!active) return alert('Inicie uma sessão primeiro.');
+    if (!quickOp.accountId) return alert('Selecione uma conta.');
+    const op = {
+      ...quickOp,
+      id: uid('op'),
+      sessionId: active.id,
+      date: active.date,
+      result: Number(quickOp.result || 0),
+      withdrawal: 0,
+      trades: Number(quickOp.trades || 0),
+      contracts: Number(quickOp.contracts || 0),
+      executionScore: Number(quickOp.executionScore || 0),
+      emotionalScore: Number(quickOp.emotionalScore || 0),
+      riskScore: Number(quickOp.riskScore || 0),
+      disciplineScore: Number(quickOp.disciplineScore || 0)
+    };
+    update(s => { s.operations.push(op); });
+    setQuickOp({ ...quickOp, setup:'', result:'', notes:'' });
+  }
+
+  function finishSession() {
+    if (!active) return;
+    const ops = state.operations.filter(o => o.sessionId === active.id);
+    const result = ops.reduce((sum,o)=>sum + Number(o.result || 0), 0);
+    const avgExec = avg(ops.map(o => o.executionScore));
+    const avgEmotion = avg(ops.map(o => o.emotionalScore));
+    const summary = { ...active, endedAt: new Date().toISOString(), status:'Encerrada', result, operationsCount: ops.length, avgExec, avgEmotion };
+    update(s => {
+      s.sessions.push(summary);
+      s.activeSession = null;
+    });
+  }
+
+  const sessionOps = active ? state.operations.filter(o => o.sessionId === active.id) : [];
+  const sessionResult = sessionOps.reduce((sum,o)=>sum + Number(o.result || 0), 0);
+  const started = active ? new Date(active.startedAt) : null;
+
+  if (active) {
+    return (
+      <div className="stack">
+        <section className="session-hero active-session">
+          <div>
+            <span className="eyebrow">Sessão ativa</span>
+            <h2>Executando Plano</h2>
+            <p>{workspaceName(state, active.workspaceId)} • {accountName(state, active.accountId)}</p>
+          </div>
+          <button className="danger" onClick={finishSession}><StopCircle size={18}/> Encerrar Sessão</button>
+        </section>
+
+        <div className="grid four">
+          <Kpi title="Início" value={started?.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} sub="horário da sessão" />
+          <Kpi title="Resultado" value={usd(sessionResult)} sub="sessão atual" />
+          <Kpi title="Operações" value={sessionOps.length} sub="registradas" />
+          <Kpi title="Meta / Loss" value={`${usd(active.dailyTarget)} / -${usd(active.maxLoss)}`} sub="plano do dia" />
+        </div>
+
+        <div className="grid two">
+          <Card title="Checklist de execução" subtitle="Antes e durante a sessão">
+            <div className="checklist session-checklist">
+              <label><input type="checkbox" checked={active.checklist.market} onChange={()=>toggleCheck('market')} /> Mercado analisado</label>
+              <label><input type="checkbox" checked={active.checklist.plan} onChange={()=>toggleCheck('plan')} /> Plano revisado</label>
+              <label><input type="checkbox" checked={active.checklist.risk} onChange={()=>toggleCheck('risk')} /> Risco definido</label>
+              <label><input type="checkbox" checked={active.checklist.aplus} onChange={()=>toggleCheck('aplus')} /> Setup A+ somente</label>
+            </div>
+          </Card>
+
+          <Card title="Operação rápida" subtitle="Registrar em poucos segundos">
+            <div className="form session-op-form">
+              <select value={quickOp.accountId} onChange={e=>setQuickOp({...quickOp,accountId:e.target.value})}>
+                {visibleAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+              <input placeholder="Ativo" value={quickOp.asset} onChange={e=>setQuickOp({...quickOp,asset:e.target.value})} />
+              <input placeholder="Setup" value={quickOp.setup} onChange={e=>setQuickOp({...quickOp,setup:e.target.value})} />
+              <input type="number" placeholder="Resultado USD" value={quickOp.result} onChange={e=>setQuickOp({...quickOp,result:e.target.value})} />
+              <input type="number" placeholder="Execução 0-10" value={quickOp.executionScore} onChange={e=>setQuickOp({...quickOp,executionScore:e.target.value})} />
+              <input type="number" placeholder="Emocional 0-10" value={quickOp.emotionalScore} onChange={e=>setQuickOp({...quickOp,emotionalScore:e.target.value})} />
+              <button onClick={saveQuickOperation}><Save size={15}/> Salvar Operação</button>
+            </div>
+          </Card>
+        </div>
+
+        <Card title="Operações da sessão" subtitle="Somente esta sessão">
+          <DataTable headers={['Data','Conta','Ativo','Setup','Resultado','Exec.','Emoc.']} rows={sessionOps.slice().reverse().map(o => [o.date, accountName(state,o.accountId), o.asset, o.setup || '-', usd(o.result), o.executionScore, o.emotionalScore])} />
+        </Card>
+      </div>
+    );
+  }
+
+  const lastSessions = state.sessions.slice(-5).reverse();
+
+  return (
+    <div className="stack">
+      <section className="session-hero">
+        <div>
+          <span className="eyebrow">Modo Sessão</span>
+          <h2>Executar Plano</h2>
+          <p>Inicie, registre operações rápidas e encerre com resumo automático.</p>
+        </div>
+        <button onClick={startSession}><PlayCircle size={18}/> Iniciar Sessão</button>
+      </section>
+
+      <Card title="Preparação da sessão" subtitle="Defina o plano antes de operar">
+        <div className="form session-form">
+          <select value={form.workspaceId} onChange={e=>setForm({...form,workspaceId:e.target.value})}>
+            {state.workspaces.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
+          </select>
+          <select value={form.accountId} onChange={e=>setForm({...form,accountId:e.target.value})}>
+            {visibleAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+          <input placeholder="Objetivo do dia" value={form.objective} onChange={e=>setForm({...form,objective:e.target.value})} />
+          <input type="number" placeholder="Meta diária USD" value={form.dailyTarget} onChange={e=>setForm({...form,dailyTarget:e.target.value})} />
+          <input type="number" placeholder="Loss máximo USD" value={form.maxLoss} onChange={e=>setForm({...form,maxLoss:e.target.value})} />
+          <input type="number" placeholder="Emocional inicial 0-10" value={form.emotionalStart} onChange={e=>setForm({...form,emotionalStart:e.target.value})} />
+          <input placeholder="Notícias / agenda" value={form.marketNotes} onChange={e=>setForm({...form,marketNotes:e.target.value})} />
+          <input placeholder="Plano do dia" value={form.plan} onChange={e=>setForm({...form,plan:e.target.value})} />
+        </div>
+      </Card>
+
+      <Card title="Últimas sessões" subtitle="Histórico recente">
+        <DataTable headers={['Data','Workspace','Resultado','Operações','Exec.','Emoc.']} rows={lastSessions.map(s => [s.date, workspaceName(state,s.workspaceId), usd(s.result), s.operationsCount, Number(s.avgExec||0).toFixed(1), Number(s.avgEmotion||0).toFixed(1)])} />
+      </Card>
+    </div>
   );
 }
 
