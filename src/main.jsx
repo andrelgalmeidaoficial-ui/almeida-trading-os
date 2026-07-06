@@ -287,9 +287,9 @@ function Sidebar({ page, setPage }) {
   ];
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Reabrir Pregão Fix</span></div></div>
+      <div className="brand"><div className="logo">AT</div><div><h2>Trading OS</h2><span>Pregão Stable Fix</span></div></div>
       <nav>{items.map(([id, Icon, label]) => <button key={id} className={page === id ? 'nav active' : 'nav'} onClick={()=>setPage(id)}><Icon size={18} /> {label}</button>)}</nav>
-      <div className="sidebar-footer"><span>Sprint 10.4</span><strong>Reabrir Pregão Fix</strong></div>
+      <div className="sidebar-footer"><span>Sprint 10.5</span><strong>Pregão Stable Fix</strong></div>
     </aside>
   );
 }
@@ -315,7 +315,7 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
   return (
     <header className="topbar">
       <div>
-        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Reabrir Pregão Fix'}</h1>
+        <h1>{contextWorkspace ? `${contextWorkspace.icon} ${contextWorkspace.name}` : 'Pregão Stable Fix'}</h1>
         <p>{contextWorkspace ? contextWorkspace.mission : 'Disciplina executa. Consistência constrói.'}</p>
       </div>
       <div className="top-actions">
@@ -342,7 +342,7 @@ function HomePage({ state, metrics, setPage, contextWorkspace, contextId }) {
     <div className="stack">
       <section className="hero command-hero">
         <div>
-          <span className="eyebrow">Almeida Trading OS • Sprint 10.4 Reabrir Pregão Fix</span>
+          <span className="eyebrow">Almeida Trading OS • Sprint 10.5 Pregão Stable Fix</span>
           <h2>{greet}, {state.settings.traderName}.</h2>
           <p>{isGlobal ? state.settings.motto : contextWorkspace.mission}</p>
         </div>
@@ -454,13 +454,6 @@ function WorkspaceDashboard({ state, metrics, workspace }) {
 
 function SessionPage({ state, update, contextId, setPage }) {
   const active = state.activeSession;
-  const safeActive = active ? {
-    checklist: { market:false, dxy:false, bigs:false, agenda:false, aplus:false, ...(active.checklist || {}) },
-    workspaceIds: active.workspaceIds?.length ? active.workspaceIds : state.workspaces.map(w => w.id),
-    market: safeActive.market || 'NQ',
-    objective: safeActive.objective || 'Executar apenas setups A+',
-    ...active
-  } : null;
 
   const [form, setForm] = useState({
     market: 'NQ',
@@ -473,7 +466,7 @@ function SessionPage({ state, update, contextId, setPage }) {
     workspaceIds: state.workspaces.map(w => w.id)
   });
 
-  const selectedWorkspaceIds = safeActive?.workspaceIds?.length ? safeActive.workspaceIds : form.workspaceIds;
+  const selectedWorkspaceIds = active?.workspaceIds?.length ? active.workspaceIds : form.workspaceIds;
   const accountsAvailable = state.accounts.filter(a => selectedWorkspaceIds.includes(a.workspaceId));
 
   const [quickOp, setQuickOp] = useState({
@@ -538,8 +531,8 @@ function SessionPage({ state, update, contextId, setPage }) {
     const op = {
       ...quickOp,
       id: uid('op'),
-      sessionId: safeActive.id,
-      date: safeActive.date,
+      sessionId: active.id,
+      date: active.date,
       result: Number(quickOp.result || 0),
       withdrawal: 0,
       trades: Number(quickOp.trades || 0),
@@ -555,7 +548,7 @@ function SessionPage({ state, update, contextId, setPage }) {
 
   function finishSession() {
     if (!active) return;
-    const ops = state.operations.filter(o => o.sessionId === safeActive.id);
+    const ops = state.operations.filter(o => o.sessionId === active.id);
     const result = ops.reduce((sum,o)=>sum + Number(o.result || 0), 0);
     const wins = ops.filter(o => Number(o.result || 0) > 0).length;
     const losses = ops.filter(o => Number(o.result || 0) < 0).length;
@@ -637,20 +630,20 @@ function SessionPage({ state, update, contextId, setPage }) {
     });
   }
 
-  const sessionOps = active ? state.operations.filter(o => o.sessionId === safeActive.id) : [];
+  const sessionOps = active ? state.operations.filter(o => o.sessionId === active.id) : [];
   const sessionResult = sessionOps.reduce((sum,o)=>sum + Number(o.result || 0), 0);
   const accountIds = [...new Set(sessionOps.map(o => o.accountId))];
   const workspaceIdsUsed = [...new Set(accountIds.map(id => state.accounts.find(a => a.id === id)?.workspaceId).filter(Boolean))];
-  const started = active ? new Date(safeActive.startedAt) : null;
+  const started = active ? new Date(active.startedAt) : null;
 
   if (active) {
     return (
       <div className="stack">
         <section className="session-hero active-session">
           <div>
-            <span className="eyebrow">Sprint 10.4 • Reabrir Pregão Fix</span>
+            <span className="eyebrow">Sprint 10.5 • Pregão Stable Fix</span>
             <h2>Pregão em Andamento</h2>
-            <p>{safeActive.market} • {safeActive.objective}</p>
+            <p>{active.market} • {active.objective}</p>
           </div>
           <button className="danger" onClick={finishSession}><StopCircle size={18}/> 🛑 Encerrar Pregão</button>
         </section>
@@ -659,17 +652,17 @@ function SessionPage({ state, update, contextId, setPage }) {
           <Kpi title="Início" value={started?.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} sub="horário do pregão" />
           <Kpi title="Resultado Geral" value={<Money value={sessionResult} />} sub="todas as mesas" />
           <Kpi title="Operações" value={sessionOps.length} sub={`${accountIds.length} conta(s) usadas`} />
-          <Kpi title="Mesas" value={workspaceIdsUsed.length || safeActive.workspaceIds.length} sub="mesas/projetos ativos" />
+          <Kpi title="Mesas" value={workspaceIdsUsed.length || active.workspaceIds.length} sub="mesas/projetos ativos" />
         </div>
 
         <div className="grid two">
           <Card title="Checklist do pregão" subtitle="Leitura única para várias mesas">
             <div className="checklist session-checklist">
-              <label><input type="checkbox" checked={safeActive.checklist.market} onChange={()=>toggleCheck('market')} /> Mercado analisado</label>
-              <label><input type="checkbox" checked={safeActive.checklist.dxy} onChange={()=>toggleCheck('dxy')} /> DXY analisado</label>
-              <label><input type="checkbox" checked={safeActive.checklist.bigs} onChange={()=>toggleCheck('bigs')} /> Big Techs analisadas</label>
-              <label><input type="checkbox" checked={safeActive.checklist.agenda} onChange={()=>toggleCheck('agenda')} /> Agenda econômica revisada</label>
-              <label><input type="checkbox" checked={safeActive.checklist.aplus} onChange={()=>toggleCheck('aplus')} /> Setup A+ somente</label>
+              <label><input type="checkbox" checked={active.checklist.market} onChange={()=>toggleCheck('market')} /> Mercado analisado</label>
+              <label><input type="checkbox" checked={active.checklist.dxy} onChange={()=>toggleCheck('dxy')} /> DXY analisado</label>
+              <label><input type="checkbox" checked={active.checklist.bigs} onChange={()=>toggleCheck('bigs')} /> Big Techs analisadas</label>
+              <label><input type="checkbox" checked={active.checklist.agenda} onChange={()=>toggleCheck('agenda')} /> Agenda econômica revisada</label>
+              <label><input type="checkbox" checked={active.checklist.aplus} onChange={()=>toggleCheck('aplus')} /> Setup A+ somente</label>
             </div>
           </Card>
 
@@ -691,7 +684,7 @@ function SessionPage({ state, update, contextId, setPage }) {
         <Card title="Resultado por mesa" subtitle="Mesmo pregão, várias contas">
           <DataTable
             headers={['Mesa/Projeto','Operações','Resultado']}
-            rows={safeActive.workspaceIds.map(wid => {
+            rows={active.workspaceIds.map(wid => {
               const accs = state.accounts.filter(a => a.workspaceId === wid).map(a => a.id);
               const ops = sessionOps.filter(o => accs.includes(o.accountId));
               const res = ops.reduce((sum,o)=>sum + Number(o.result || 0), 0);
@@ -719,7 +712,7 @@ function SessionPage({ state, update, contextId, setPage }) {
     <div className="stack">
       <section className="session-hero">
         <div>
-          <span className="eyebrow">Sprint 10.4 • Reabrir Pregão Fix</span>
+          <span className="eyebrow">Sprint 10.5 • Pregão Stable Fix</span>
           <h2>🚀 Iniciar Pregão</h2>
           <p>Um único pregão pode conter operações em Apex, Mide, TradeDay, Lucid e outras mesas.</p>
         </div>
@@ -836,7 +829,7 @@ function WorkspacesPage({ state, update, setContextId, setPage }) {
 
   return (
     <div className="stack">
-      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Reabrir Pregão Fix">
+      <Card title={editing ? 'Editar Workspace' : 'Novo Workspace'} subtitle="Sprint 1 — Pregão Stable Fix">
         <div className="form workspace-form">
           <input placeholder="Ícone" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})} />
           <input placeholder="Nome" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
@@ -1321,7 +1314,7 @@ function JavesPanel({ state, metrics, contextWorkspace }) {
 function dailyBrief(state, metrics, contextWorkspace) {
   const name = state.settings.traderName || 'Trader';
   const ctx = contextWorkspace ? ` no Workspace ${contextWorkspace.name}` : '';
-  if (!metrics.totalOps) return `Boa noite, ${name}. Reabrir Pregão Fix ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
+  if (!metrics.totalOps) return `Boa noite, ${name}. Pregão Stable Fix ativo${ctx}. Cadastre contas, lance operações e eu começarei a analisar sua evolução.`;
   if (metrics.tes >= 85) return `${name}, sua execução está forte${ctx}. Mantenha o plano e evite aumentar risco sem necessidade.`;
   if (metrics.tes >= 60) return `${name}, há evolução${ctx}, mas ainda existe espaço para melhorar disciplina, risco e emocional. Foque em setups A+.`;
   return `${name}, os dados indicam necessidade de reduzir risco${ctx}. Hoje a prioridade é proteger capital, reduzir risco e executar apenas setups A+.`;

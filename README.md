@@ -1,17 +1,16 @@
-# Almeida Trading OS — Sprint 10.4 Reabrir Pregão Fix
+# Almeida Trading OS — Sprint 10.5 Pregão Stable Fix
 
 ## Correção
-- Corrige tela branca ao reabrir pregões antigos
-- Adiciona fallback para checklist ausente
-- Adiciona fallback para workspaceIds ausente
-- Mantém mercado e objetivo padrão se vierem vazios
-- Reabrir pregão agora restaura estrutura segura
+- Restaura o fluxo de Iniciar Pregão
+- Corrige Reabrir pregão sem quebrar a criação de novo pregão
+- Fallback seguro apenas no reabrir
+- Base recomendada após erro de tela branca
 
 ## Publicar
 
 ```bash
 npm run dev
 git add .
-git commit -m "Corrige reabrir pregao Sprint 10.4"
+git commit -m "Corrige Pregao Stable Sprint 10.5"
 git push
 ```
