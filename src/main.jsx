@@ -1,16 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initializeApp } from 'firebase/app';
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
-  signOut
-} from 'firebase/auth';
-import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import {
   Home,
   Briefcase,
@@ -38,19 +28,8 @@ import {
   TrendingUp
 } from 'lucide-react';
 import './styles.css';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBzrwiianeCybG4Ez6QgEdVzcXq7-_BTGU",
-  authDomain: "almeida-capital-pro.firebaseapp.com",
-  projectId: "almeida-capital-pro",
-  storageBucket: "almeida-capital-pro.firebasestorage.app",
-  messagingSenderId: "139760939666",
-  appId: "1:139760939666:web:35b533887cb050b16d6c4b"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { authentication } from './storage/firebaseStorage.js';
+import { useTradingState } from './storage/useTradingState.js';
 
 const initialState = {
   settings: {
@@ -149,16 +128,16 @@ function Login() {
   const [msg, setMsg] = useState('');
 
   async function doLogin() {
-    try { setMsg('Entrando...'); await signInWithEmailAndPassword(auth, email, password); }
+    try { setMsg('Entrando...'); await authentication.login(email, password); }
     catch (err) { setMsg(err.message); }
   }
   async function doSignup() {
-    try { setMsg('Criando conta...'); await createUserWithEmailAndPassword(auth, email, password); }
+    try { setMsg('Criando conta...'); await authentication.signup(email, password); }
     catch (err) { setMsg(err.message); }
   }
   async function resetPassword() {
     if (!email) return setMsg('Informe o e-mail para recuperar a senha.');
-    try { await sendPasswordResetEmail(auth, email); setMsg('E-mail de recuperação enviado.'); }
+    try { await authentication.resetPassword(email); setMsg('E-mail de recuperação enviado.'); }
     catch (err) { setMsg(err.message); }
   }
 
@@ -182,53 +161,12 @@ function Login() {
 
 function App() {
   const [user, setUser] = useState(null);
-  const [loaded, setLoaded] = useState(false);
-  const [sync, setSync] = useState('Conectando');
   const [page, setPage] = useState('home');
   const [contextId, setContextId] = useState('all');
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const [state, setState] = useState(initialState);
+  const { state, setState, loaded, sync } = useTradingState(user, initialState);
 
-  useEffect(() => onAuthStateChanged(auth, current => { setUser(current); if (!current) setLoaded(false); }), []);
-
-  useEffect(() => {
-    if (!user) return;
-    const ref = doc(db, 'users', user.uid, 'foundation', 'state');
-    setSync('Sincronizando...');
-    return onSnapshot(ref, snap => {
-      if (snap.exists()) {
-        const data = snap.data();
-        const mergedWorkspaces = data.workspaces?.some(w => w.id === 'lucid') ? data.workspaces : [...(data.workspaces || initialState.workspaces), initialState.workspaces.find(w => w.id === 'lucid')];
-        setState({
-          ...initialState,
-          ...data,
-          settings: { ...initialState.settings, ...(data.settings || {}) },
-          workspaces: mergedWorkspaces,
-          accounts: data.accounts || [],
-          operations: data.operations || [],
-          sessions: data.sessions || [],
-          activeSession: data.activeSession || null
-        });
-        setSync('Sincronizado');
-      } else {
-        setDoc(ref, initialState);
-        setSync('Base criada');
-      }
-      setLoaded(true);
-    }, err => { console.error(err); setSync('Erro'); setLoaded(true); });
-  }, [user]);
-
-  useEffect(() => {
-    if (!user || !loaded) return;
-    const timer = setTimeout(() => {
-      setSync('Salvando...');
-      const ref = doc(db, 'users', user.uid, 'foundation', 'state');
-      setDoc(ref, { ...state, updatedAt: new Date().toISOString() }, { merge: true })
-        .then(()=>setSync('Sincronizado'))
-        .catch(()=>setSync('Erro ao salvar'));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [state]);
+  useEffect(() => authentication.subscribe(setUser), []);
 
   function update(fn) {
     setState(prev => {
@@ -326,7 +264,7 @@ function Topbar({ user, sync, state, setState, contextId, setContextId, contextW
         </select>
         <button className="ghost" onClick={exportBackup}><Download size={15} /> Backup</button>
         <label className="ghost upload"><Upload size={15} /> Importar<input type="file" accept=".json" onChange={importBackup} /></label>
-        <button className="danger" onClick={()=>signOut(auth)}><LogOut size={15} /> Sair</button>
+        <button className="danger" onClick={()=>authentication.logout()}><LogOut size={15} /> Sair</button>
       </div>
     </header>
   );
